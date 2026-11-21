@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<title>Pulso</title>
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Pulso"><meta name="theme-color" content="#0a0a0c"><meta name="robots" content="noindex"><link rel="apple-touch-icon" href="icon-180.png"><link rel="manifest" href="manifest.webmanifest"><script src="config.js"></script>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--ink:#0a0a0c;--ink2:#141418;--ink3:#1d1d23;--line:#2a2a33;--paper:#f4f1ea;--mute:#9a978f;--acc:#ff5a36;--top:52px;--ban:0px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--ink);color:var(--paper);font-family:Inter,system-ui,sans-serif;overflow:hidden;overscroll-behavior:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input{font:inherit;color:inherit}
+[hidden]{display:none!important}
+.serif{font-family:Fraunces,Georgia,serif}
+
+/* login */
+#login{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;padding:calc(32px + var(--sat)) 28px 32px;background:radial-gradient(120% 70% at 20% 0%,#2a1410 0%,var(--ink) 60%)}
+#login h1{font-family:Fraunces,serif;font-weight:900;font-size:56px;letter-spacing:-2px;margin:0;line-height:.95}
+#login h1 i{color:var(--acc);font-style:normal}
+#login .sub{color:var(--mute);margin:10px 0 34px;font-size:15px;line-height:1.45}
+.field{display:block;width:100%;background:var(--ink2);border:1px solid var(--line);border-radius:14px;padding:15px 16px;margin-bottom:10px;font-size:16px;outline:none}
+.field:focus{border-color:var(--acc)}
+.btn{display:block;width:100%;background:var(--paper);color:#111;font-weight:700;border-radius:14px;padding:15px;font-size:16px;margin-top:6px}
+.btn.ghost{background:transparent;color:var(--paper);border:1px solid var(--line)}
+.btn.sm{display:inline-block;width:auto;padding:9px 14px;font-size:13px;border-radius:10px;margin:0}
+.plist{display:flex;flex-direction:column;gap:8px;margin-bottom:22px}
+.plist button{display:flex;align-items:center;gap:12px;background:var(--ink2);border:1px solid var(--line);border-radius:14px;padding:12px 14px;text-align:left;font-weight:600}
+.av{width:36px;height:36px;border-radius:50%;background:var(--acc);color:#111;display:grid;place-items:center;font-family:Fraunces,serif;font-weight:900;font-size:17px;flex:none}
+.err{color:#ff8a70;font-size:13px;min-height:18px;margin:4px 2px}
+
+/* top */
+#top{position:fixed;top:0;left:0;right:0;height:calc(var(--top) + var(--sat));z-index:20;display:flex;align-items:center;gap:8px;padding:var(--sat) 10px 0;background:linear-gradient(#0a0a0cf2,#0a0a0cb8 70%,#0a0a0c00)}
+#tabs{flex:1;display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;padding:0 4px;height:100%;align-items:center}
+#tabs::-webkit-scrollbar{display:none}
+#tabs button{position:relative;white-space:nowrap;font-size:14.5px;font-weight:600;color:#ffffff80;padding:6px 0;transition:color .2s}
+#tabs button.on{color:#fff}
+#tabs button.on::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:3px;border-radius:2px;background:var(--acc)}
+#refresh{width:36px;height:36px;display:grid;place-items:center;opacity:.85;flex:none}
+#refresh.spin svg{animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* banner */
+#banner{position:fixed;top:calc(var(--top) + var(--sat));left:0;right:0;height:34px;z-index:19;background:#0a0a0ce0;border-top:1px solid #ffffff10;border-bottom:1px solid #ffffff14;display:flex;align-items:center;overflow:hidden;font-size:12.5px}
+#banner .tag{flex:none;height:100%;display:flex;align-items:center;padding:0 10px;font-weight:800;font-size:10.5px;letter-spacing:.8px;background:var(--acc);color:#0a0a0c;z-index:2}
+#banner .run{display:flex;white-space:nowrap;animation:mq linear infinite;will-change:transform}
+#banner .run>span{padding:0 18px;border-right:1px solid #ffffff1c;display:inline-flex;gap:7px;align-items:center}
+#banner .run b{font-weight:700}
+#banner .up{color:#2fd58b}#banner .dn{color:#ff6b5e}
+#banner .dim{color:var(--mute)}
+#banner .cta{padding:0 14px;color:var(--mute)}
+@keyframes mq{to{transform:translateX(-50%)}}
+
+/* feed */
+.feed{position:fixed;inset:0;overflow-y:scroll;overflow-anchor:none;scroll-snap-type:y mandatory;scrollbar-width:none;overscroll-behavior:contain}
+.feed::-webkit-scrollbar{display:none}
+.card{position:relative;height:100vh;height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;background:var(--ink)}
+.card .bg{position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(34px) saturate(1.2) brightness(.42);transform:scale(1.1)}
+.card.noimg .bg{filter:none;background:radial-gradient(90% 60% at 80% 10%,color-mix(in srgb,var(--acc) 38%,#000) 0%,var(--ink) 70%)}
+.card::after{content:"";position:absolute;inset:0;background:linear-gradient(#0a0a0c00 30%,#0a0a0ccc 72%,#0a0a0c);pointer-events:none}
+.card .inner{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;justify-content:flex-end;padding:calc(var(--top) + var(--sat) + var(--ban) + 14px) 62px calc(34px + var(--sab)) 20px}
+.card .pic{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;margin:0 -42px 18px 0}
+.card .pic img{max-width:100%;max-height:100%;border-radius:16px;box-shadow:0 18px 50px #000a;object-fit:contain}
+.card.noimg .pic{align-items:flex-end;justify-content:flex-start}
+.card.noimg .pic span{font-family:Fraunces,serif;font-weight:900;font-size:120px;line-height:.8;color:var(--acc);opacity:.9;letter-spacing:-6px}
+.meta{display:flex;align-items:center;gap:8px;font-size:12px;color:#ffffffa8;margin-bottom:9px;font-weight:500}
+.meta .src{background:var(--acc);color:#0a0a0c;font-weight:800;padding:3px 8px;border-radius:6px;font-size:11px;letter-spacing:.2px;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card h2{font-family:Fraunces,serif;font-weight:700;font-size:25px;line-height:1.14;letter-spacing:-.4px;margin:0 0 10px;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.card .desc{font-size:14.5px;line-height:1.45;color:#ffffffc4;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card .hint{margin-top:14px;font-size:11.5px;color:#ffffff70;letter-spacing:.3px}
+.card.post h2{font-family:Inter,sans-serif;font-weight:500;font-size:18.5px;line-height:1.42;letter-spacing:0;-webkit-line-clamp:12}
+.card.post.noimg .pic span{font-size:92px;letter-spacing:-3px}
+.ptext{font-size:17px;line-height:1.5;margin:4px 0 6px;white-space:pre-wrap;overflow-wrap:anywhere}
+.lead{font-family:Fraunces,serif;font-weight:600;font-size:17.5px;line-height:1.4;margin:0 0 12px}
+.bodyp{font-size:15px;line-height:1.58;margin:0 0 12px;color:#f4f1eae0}
+.blk{background:var(--ink3);border-left:3px solid var(--acc);border-radius:0 12px 12px 0;padding:11px 13px;margin-bottom:10px}
+.blk>b{display:block;font-size:12.5px;letter-spacing:.3px;margin-bottom:6px}
+.blk p{margin:0 0 6px;font-size:14.5px;line-height:1.5;color:#f4f1eae0}.blk p:last-child{margin:0}
+.blk ul{margin:0;padding-left:18px}.blk li{font-size:14.5px;line-height:1.5;margin-bottom:5px;color:#f4f1eae0}
+.sce{padding:8px 0;border-top:1px solid var(--line)}.sce:first-of-type{border-top:0;padding-top:0}
+.sce span{font-weight:700;font-size:14px;margin-right:8px}.sce em{font-style:normal;font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;background:#ffffff18;white-space:nowrap}
+.sce em.p-a{background:#2fd58b30;color:#5fe3a6}.sce em.p-m{background:#ffd23f2e;color:#ffd96a}.sce em.p-b{background:#ffffff14;color:var(--mute)}
+.sce p{margin-top:5px!important}
+.ask{display:flex;gap:8px;align-items:stretch}.ask .field{margin:0;flex:1;min-width:0}.ask .btn{flex:none}
+.qa{background:var(--ink3);border-radius:12px;padding:11px 13px;margin-bottom:10px;font-size:14.5px;line-height:1.5}.qa b{display:block;color:var(--acc);font-size:12.5px;margin-bottom:5px}
+.rail{position:absolute;right:10px;bottom:calc(44px + var(--sab));z-index:3;display:flex;flex-direction:column;gap:16px}
+.rail button{width:44px;height:44px;border-radius:50%;background:#ffffff1c;backdrop-filter:blur(8px);display:grid;place-items:center}
+.rail button.on{background:var(--acc);color:#0a0a0c}
+.loader{height:100vh;height:100dvh;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--mute);font-size:14px;text-align:center;padding:0 40px}
+.dot{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--acc);animation:sp .9s linear infinite}
+
+/* sheet */
+#scrim{position:fixed;inset:0;background:#000a;z-index:30;opacity:0;pointer-events:none;transition:opacity .25s}
+#scrim.on{opacity:1;pointer-events:auto}
+#sheet{position:fixed;left:0;right:0;bottom:0;top:calc(6vh + var(--sat));z-index:31;background:var(--ink2);border-radius:22px 22px 0 0;transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;overflow:hidden}
+#sheet.on{transform:none}
+#sheet .grab{flex:none;padding:10px 0 6px;display:grid;place-items:center}
+#sheet .grab i{width:38px;height:4px;border-radius:2px;background:#ffffff38}
+#sheet .body{flex:1;overflow-y:auto;padding:4px 20px 20px}
+#sheet img.hero{width:100%;max-height:210px;object-fit:cover;border-radius:14px;margin-bottom:14px}
+#sheet h3{font-family:Fraunces,serif;font-weight:700;font-size:23px;line-height:1.17;letter-spacing:-.3px;margin:0 0 16px}
+.sec{font-size:11px;font-weight:800;letter-spacing:1.4px;color:var(--acc);margin:20px 0 9px;text-transform:uppercase}
+.sum li,.imp li{font-size:15px;line-height:1.5;margin-bottom:9px;color:#f4f1eae0}
+.sum,.imp{margin:0;padding-left:18px}
+.imp{list-style:none;padding:0}
+.imp li{background:var(--ink3);border-left:3px solid var(--acc);border-radius:0 10px 10px 0;padding:10px 12px}
+.note{font-size:12.5px;color:var(--mute);line-height:1.45}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chips button{font-size:12.5px;border:1px solid var(--line);border-radius:20px;padding:6px 11px;color:#ffffffd0}
+.chips button.on{background:var(--acc);border-color:var(--acc);color:#0a0a0c;font-weight:700}
+.sk{height:13px;border-radius:6px;background:linear-gradient(90deg,#ffffff12,#ffffff24,#ffffff12);background-size:200% 100%;animation:shm 1.2s infinite;margin-bottom:10px}
+@keyframes shm{to{background-position:-200% 0}}
+#sheet .foot{flex:none;display:flex;gap:10px;padding:12px 20px calc(18px + var(--sab));border-top:1px solid var(--line);background:var(--ink2)}
+#sheet .foot .btn{margin:0}
+#sheet .foot .sq{flex:none;width:52px;border:1px solid var(--line);border-radius:14px;display:grid;place-items:center}
+#sheet .foot .sq.on{background:var(--acc);border-color:var(--acc);color:#0a0a0c}
+
+/* drawer */
+#drawer{position:fixed;top:0;bottom:0;left:0;width:min(92vw,420px);z-index:32;background:var(--ink2);transform:translateX(-102%);transition:transform .28s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+#drawer.on{transform:none}
+#drawer .head{flex:none;padding:calc(22px + var(--sat)) 20px 14px;display:flex;align-items:center;gap:14px}
+#drawer .head .av{width:54px;height:54px;font-size:26px}
+#drawer .head b{font-family:Fraunces,serif;font-size:22px;font-weight:700;display:block}
+#drawer .head small{color:var(--mute);font-size:12.5px}
+.seg{flex:none;display:flex;margin:0 20px;background:var(--ink3);border-radius:12px;padding:4px}
+.seg button{flex:1;padding:9px 0;font-size:13px;font-weight:600;border-radius:9px;color:var(--mute)}
+.seg button.on{background:var(--paper);color:#111}
+#dbody{flex:1;overflow-y:auto;padding:16px 20px calc(30px + var(--sab))}
+.sv{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.sv img,.sv .ph{width:66px;height:66px;border-radius:10px;object-fit:cover;flex:none;background:var(--ink3)}
+.sv b{font-family:Fraunces,serif;font-weight:600;font-size:15px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.sv small{color:var(--mute);font-size:11.5px;display:block;margin-top:4px}
+.sv .x{flex:none;color:var(--mute);padding:4px;font-size:18px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{background:var(--ink3);border-radius:14px;padding:13px 14px}
+.kpi b{font-family:Fraunces,serif;font-size:27px;font-weight:700;display:block;line-height:1}
+.kpi small{color:var(--mute);font-size:11.5px}
+.bars{display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:6px}
+.bars div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;height:100%;font-size:10px;color:var(--mute)}
+.bars i{width:100%;border-radius:5px 5px 2px 2px;background:var(--acc);min-height:2px}
+.trow{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:13px}
+.trow span{width:86px;flex:none}
+.trow i{height:8px;border-radius:4px;display:block}
+.trow em{font-style:normal;color:var(--mute);font-size:11.5px;margin-left:auto;white-space:nowrap}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.row .g{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row small{color:var(--mute);display:block;font-size:11.5px;overflow:hidden;text-overflow:ellipsis}
+.st{width:8px;height:8px;border-radius:50%;background:#555;flex:none}
+.st.ok{background:#2fd58b}.st.ko{background:#ff6b5e}
+.sw{width:40px;height:24px;border-radius:12px;background:var(--line);position:relative;flex:none;transition:background .2s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
+.sw.on{background:var(--acc)}.sw.on::after{transform:translateX(16px)}
+details{border-bottom:1px solid var(--line)}
+details summary{list-style:none;padding:14px 0;font-weight:600;font-size:15px;display:flex;justify-content:space-between}
+details summary::after{content:"+";color:var(--mute);font-size:18px}
+details[open] summary::after{content:"–"}
+details .in{padding-bottom:14px}
+.mini{display:flex;gap:6px;overflow-x:auto;margin-bottom:8px;scrollbar-width:none}
+.mini button{font-size:12.5px;padding:6px 11px;border-radius:16px;border:1px solid var(--line);white-space:nowrap;color:var(--mute)}
+.mini button.on{background:var(--paper);color:#111;border-color:var(--paper);font-weight:600}
+#toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);background:var(--paper);color:#111;font-size:13.5px;font-weight:600;padding:10px 16px;border-radius:22px;z-index:50;opacity:0;transition:all .25s;pointer-events:none;max-width:84vw;text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <h1 class="serif">Pulso<i>.</i></h1>
+  <p class="sub">Tu prensa, en scroll. Cada pestaña aprende de lo que lees.</p>
+  <div class="plist" id="plist"></div>
+  <div id="newp">
+    <input class="field" id="lname" placeholder="Tu nombre" maxlength="24" autocomplete="off">
+    <input class="field" id="lpin" placeholder="PIN (opcional)" inputmode="numeric" maxlength="8" type="password" autocomplete="off">
+    <div class="err" id="lerr"></div>
+    <button class="btn" id="lgo">Entrar</button>
+    <button class="btn ghost" id="limp" style="margin-top:10px">Restaurar copia de seguridad</button>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <header id="top">
+    <button class="av" id="avatar"></button>
+    <nav id="tabs"></nav>
+    <button id="refresh" aria-label="Actualizar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+  </header>
+  <div id="banner" hidden></div>
+  <main id="feeds"></main>
+  <div id="scrim"></div>
+  <aside id="drawer">
+    <div class="head"><div class="av" id="dav"></div><div><b id="dname"></b><small id="dsub"></small></div></div>
+    <div class="seg" id="dseg"><button data-v="saved" class="on">Guardadas</button><button data-v="stats">Estadísticas</button><button data-v="conf">Ajustes</button></div>
+    <div id="dbody"></div>
+  </aside>
+  <section id="sheet"><div class="grab"><i></i></div><div class="body" id="sbody"></div><div class="foot" id="sfoot"></div></section>
+</div>
+<div id="toast"></div>
+<input type="file" id="file" accept="application/json,.json" hidden>
+
+<script>
+"use strict";
+/* ───────── config ───────── */
+const TABS=[
+ {id:'gen',name:'General',color:'#ff5a36',hl:18,max:72,hint:'',base:['última hora','breaking news','à la une actualité']},
+ {id:'fin',name:'Finanzas',color:'#21d07a',hl:20,max:96,hint:'mercados',base:['bolsa mercados','stock market investing','bourse marchés','bancos centrales tipos']},
+ {id:'emp',name:'Empresas',color:'#e5b567',hl:48,max:480,hint:'',base:['company turnaround success strategy','estrategia empresarial caso de éxito','empresa quiebra reestructuración','acquisition merger strategy rationale','stratégie entreprise redressement','business case study how company grew','CEO strategic pivot results','empresa concurso de acreedores rescate','why company failed lessons','business model innovation winner']},
+ {id:'nuc',name:'Nuclear',color:'#ffd23f',hl:60,max:720,hint:'nuclear',base:['energía nuclear','nuclear energy reactor','énergie nucléaire EPR','small modular reactor SMR','uranium fuel enrichment HALEU','EPR2 EDF réacteur','nuclear fusion ITER','centrales nucleares España Almaraz','nuclear waste repository','Hinkley Point Sizewell','advanced reactor TerraPower X-energy','réacteur SMR Nuward']},
+ {id:'geo',name:'Geopolítica',color:'#6ea8ff',hl:60,max:600,hint:'geopolítica',base:['geopolítica análisis','geopolitics analysis','géopolitique analyse','foreign policy think tank','política exterior Europa','défense stratégie Europe']},
+ {id:'def',name:'Defensa',color:'#a3b18a',hl:36,max:336,hint:'defensa',base:['defense technology startup new system','drone autonomous system unveiled','tecnología defensa nuevo sistema','défense innovation technologie armement','hypersonic directed energy laser weapon test','Anduril Helsing contract','counter-drone electronic warfare','defence tech funding round Europe','loyal wingman collaborative combat aircraft','unmanned surface vessel navy']},
+ {id:'ia',name:'IA',color:'#a78bfa',hl:30,max:240,hint:'AI',base:['AI agents open source new','LLM developer tools release','hackathon winners AI project','build with AI tutorial','open source model release','inteligencia artificial herramientas desarrolladores','MCP server agents framework','AI coding assistant launch']},
+ {id:'deep',name:'Deeptech',color:'#22d3ee',hl:36,max:336,hint:'',base:['deep tech startup funding round','deeptech levée de fonds startup','startup deeptech ronda de financiación','humanoid robot startup','fusion startup milestone','semiconductor chip startup','space startup launch','quantum computing startup','EIC Accelerator deep tech','advanced materials battery breakthrough startup']},
+ {id:'res',name:'Research',color:'#f0abfc',hl:120,max:900,hint:'',base:['new study published breakthrough','ScienceDirect study finds','nuevo estudio científico publicado','researchers demonstrate first','étude scientifique publiée découverte','peer-reviewed study energy materials']},
+ {id:'mat',name:'Matemáticas',color:'#2dd4bf',hl:90,max:720,hint:'',base:['mathematics breakthrough proof','matemáticas demostración avance','AI theorem proving Lean mathematics','post-quantum cryptography','quantum computing error correction','homomorphic encryption zero-knowledge proof','mathématiques découverte démonstration','criptografía cuántica','new AI model architecture mathematics','quantitative finance new model research','modelo financiero cuantitativo nuevo','machine learning asset pricing paper','volatility model option pricing research','factor investing new research quant']},
+ {id:'dep',name:'Deporte',color:'#ff4fa3',hl:14,max:60,hint:'deporte',base:['deporte hoy','sports news','sport résultats']}
+];
+const TAB=Object.fromEntries(TABS.map(t=>[t.id,t]));
+const FEEDS={
+ gen:[['Le Monde','https://www.lemonde.fr/rss/une.xml'],['The Guardian','https://www.theguardian.com/international/rss'],['El Mundo','https://e00-elmundo.uecdn.es/elmundo/rss/portada.xml'],['El País','https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada'],['BBC News','https://feeds.bbci.co.uk/news/rss.xml'],['The New York Times','https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml'],['Le Figaro','https://www.lefigaro.fr/rss/figaro_actualites.xml'],['France 24','https://www.france24.com/es/rss'],['El Confidencial','https://rss.elconfidencial.com/espana/'],['Reddit · r/worldnews','https://www.reddit.com/r/worldnews/top/.rss?t=day'],['Hacker News','https://hnrss.org/frontpage?points=250']],
+ fin:[['Financial Times','https://www.ft.com/rss/home'],['Expansión','https://e00-expansion.uecdn.es/rss/mercados.xml'],['Les Echos','https://services.lesechos.fr/rss/les-echos-finance-marches.xml'],['CNBC','https://www.cnbc.com/id/20910258/device/rss/rss.html'],['MarketWatch','https://feeds.content.dowjones.io/public/rss/mw_topstories'],['Yahoo Finance','https://finance.yahoo.com/news/rssindex'],['Cinco Días','https://cincodias.elpais.com/seccion/rss/mercados/'],['The Guardian · Business','https://www.theguardian.com/business/rss'],['El Economista','https://www.eleconomista.es/rss/rss-mercados.php'],['Investing.com','https://www.investing.com/rss/news_25.rss'],['BBC Business','https://feeds.bbci.co.uk/news/business/rss.xml']],
+ nuc:[["World Nuclear News","https://www.world-nuclear-news.org/rss","world-nuclear-news.org"],["NucNet","https://www.nucnet.org/feed.rss","nucnet.org"],["ANS Nuclear Newswire","https://www.ans.org/news/feed/","ans.org"],["Nuclear Engineering Intl.","https://www.neimagazine.com/feed/","neimagazine.com"],["IAEA","https://www.iaea.org/feeds/topnews","iaea.org"],["OECD NEA","https://www.oecd-nea.org/rss/news.xml","oecd-nea.org"],["World Nuclear Association","https://world-nuclear.org/rss","world-nuclear.org"],["Nuclear Energy Institute","https://www.nei.org/rss/news","nei.org"],["US NRC","https://www.nrc.gov/public-involve/rss?feed=news","nrc.gov"],["US DOE · Nuclear Energy","https://www.energy.gov/ne/rss.xml","energy.gov/ne"],["Neutron Bytes","https://neutronbytes.com/feed/","neutronbytes.com"],["Atomic Insights","https://atomicinsights.com/feed/","atomicinsights.com"],["Bulletin of the Atomic Scientists","https://thebulletin.org/feed/","thebulletin.org"],["POWER · Nuclear","https://www.powermag.com/category/nuclear/feed/","powermag.com"],["Power Engineering · Nuclear","https://www.power-eng.com/nuclear/feed/","power-eng.com"],["Utility Dive","https://www.utilitydive.com/feeds/news/","utilitydive.com"],["The Guardian · Nuclear","https://www.theguardian.com/environment/nuclearpower/rss","theguardian.com"],["Decouple","https://www.decouple.media/feed","decouple.media"],["Nuclear Barbarians","https://nuclearbarbarians.substack.com/feed","nuclearbarbarians.substack.com"],["The Breakthrough Institute","https://thebreakthrough.org/feed","thebreakthrough.org"],["Nuclear Innovation Alliance","https://nuclearinnovationalliance.org/rss.xml","nuclearinnovationalliance.org"],["World Nuclear Industry Status Report","https://www.worldnuclearreport.org/spip.php?page=backend","worldnuclearreport.org"],["nucleareurope","https://www.nucleareurope.eu/feed/","nucleareurope.eu"],["Euractiv · Energy","https://www.euractiv.com/sections/energy/feed/","euractiv.com"],["Mining.com · Uranium","https://www.mining.com/tag/uranium/feed/","mining.com"],["Fusion Industry Association","https://www.fusionindustryassociation.org/feed/","fusionindustryassociation.org"],["ITER","https://www.iter.org/rss.xml","iter.org"],["JAIF · Atoms in Japan","https://www.jaif.or.jp/en/feed/","jaif.or.jp"],["SFEN","https://www.sfen.org/feed/","sfen.org"],["Connaissance des Énergies","https://www.connaissancedesenergies.org/rss.xml","connaissancedesenergies.org"],["Le Monde de l'Énergie","https://www.lemondedelenergie.com/feed/","lemondedelenergie.com"],["Révolution Énergétique","https://www.revolution-energetique.com/feed/","revolution-energetique.com"],["L'Usine Nouvelle · Énergie","https://www.usinenouvelle.com/rss/energie/","usinenouvelle.com"],["ASNR","https://www.asnr.fr/rss.xml","asnr.fr"],["CEA","https://www.cea.fr/rss/actualites.xml","cea.fr"],["Foro Nuclear","https://www.foronuclear.org/feed/","foronuclear.org"],["Sociedad Nuclear Española","https://www.sne.es/feed/","sne.es"],["Jóvenes Nucleares","https://www.jovenesnucleares.org/feed/","jovenesnucleares.org"],["CSN","https://www.csn.es/rss","csn.es"],["El Periódico de la Energía","https://elperiodicodelaenergia.com/feed/","elperiodicodelaenergia.com"]],
+ geo:[["Foreign Affairs","https://www.foreignaffairs.com/rss.xml","foreignaffairs.com"],["Foreign Policy","https://foreignpolicy.com/feed/","foreignpolicy.com"],["War on the Rocks","https://warontherocks.com/feed/","warontherocks.com"],["Chatham House","https://www.chathamhouse.org/rss/all","chathamhouse.org"],["Council on Foreign Relations","https://www.cfr.org/rss.xml","cfr.org"],["Carnegie Endowment","https://carnegieendowment.org/rss/solr/?lang=en","carnegieendowment.org"],["Brookings","https://www.brookings.edu/feed/","brookings.edu"],["CSIS","https://www.csis.org/rss.xml","csis.org"],["RUSI","https://www.rusi.org/rss.xml","rusi.org"],["Atlantic Council","https://www.atlanticcouncil.org/feed/","atlanticcouncil.org"],["ECFR","https://ecfr.eu/feed/","ecfr.eu"],["Responsible Statecraft","https://responsiblestatecraft.org/feed/","responsiblestatecraft.org"],["The National Interest","https://nationalinterest.org/feed","nationalinterest.org"],["Geopolitical Futures","https://geopoliticalfutures.com/feed/","geopoliticalfutures.com"],["Project Syndicate","https://www.project-syndicate.org/rss","project-syndicate.org"],["The Diplomat","https://thediplomat.com/feed/","thediplomat.com"],["Lowy · The Interpreter","https://www.lowyinstitute.org/the-interpreter/rss.xml","lowyinstitute.org"],["ASPI · The Strategist","https://www.aspistrategist.org.au/feed/","aspistrategist.org.au"],["Engelsberg Ideas","https://engelsbergideas.com/feed/","engelsbergideas.com"],["UnHerd","https://unherd.com/feed/","unherd.com"],["Asia Times","https://asiatimes.com/feed/","asiatimes.com"],["Middle East Eye","https://www.middleeasteye.net/rss","middleeasteye.net"],["Kyiv Independent","https://kyivindependent.com/feed/","kyivindependent.com"],["Le Monde diplomatique (EN)","https://mondediplo.com/backend","mondediplo.com"],["GZERO · Ian Bremmer","https://www.gzeromedia.com/feeds/feed.rss","gzeromedia.com"],["Lawrence Freedman","https://samf.substack.com/feed","samf.substack.com"],["Adam Tooze · Chartbook","https://adamtooze.substack.com/feed","adamtooze.substack.com"],["John Mearsheimer","https://mearsheimer.substack.com/feed","mearsheimer.substack.com"],["Phillips O'Brien","https://phillipspobrien.substack.com/feed","phillipspobrien.substack.com"],["Timothy Snyder","https://snyder.substack.com/feed","snyder.substack.com"],["Peter Zeihan","https://zeihan.com/feed/","zeihan.com"],["Noahpinion","https://www.noahpinion.blog/feed","noahpinion.blog"],["Sinocism","https://sinocism.com/feed","sinocism.com"],["ChinaTalk","https://www.chinatalk.media/feed","chinatalk.media"],["Le Grand Continent","https://legrandcontinent.eu/fr/feed/","legrandcontinent.eu/fr"],["IRIS · Pascal Boniface","https://www.iris-france.org/feed/","iris-france.org"],["IFRI","https://www.ifri.org/fr/rss.xml","ifri.org"],["Fondation pour la Recherche Stratégique","https://www.frstrategie.org/rss.xml","frstrategie.org"],["Institut Montaigne","https://www.institutmontaigne.org/rss.xml","institutmontaigne.org"],["Diploweb","https://www.diploweb.com/spip.php?page=backend","diploweb.com"],["Le Rubicon","https://lerubicon.org/feed/","lerubicon.org"],["Conflits","https://www.revueconflits.com/feed/","revueconflits.com"],["Le Monde diplomatique","https://www.monde-diplomatique.fr/rss/","monde-diplomatique.fr"],["Areion24 · Diplomatie","https://www.areion24.news/feed/","areion24.news"],["Zone Militaire (Opex360)","https://www.opex360.com/feed/","opex360.com"],["Le Diplomate","https://lediplomate.media/feed/","lediplomate.media"],["Telos","https://www.telos-eu.com/fr/rss","telos-eu.com"],["Courrier international","https://www.courrierinternational.com/feed/all/rss.xml","courrierinternational.com"],["Real Instituto Elcano","https://www.realinstitutoelcano.org/feed/","realinstitutoelcano.org"],["CIDOB","https://www.cidob.org/rss.xml","cidob.org"],["Política Exterior","https://www.politicaexterior.com/feed/","politicaexterior.com"],["esglobal","https://www.esglobal.org/feed/","esglobal.org"],["El Orden Mundial","https://elordenmundial.com/feed/","elordenmundial.com"],["Descifrando la Guerra","https://www.descifrandolaguerra.es/feed/","descifrandolaguerra.es"],["El Grand Continent","https://legrandcontinent.eu/es/feed/","legrandcontinent.eu/es"],["Instituto Español de Estudios Estratégicos","https://www.ieee.es/rss/","ieee.es"],["Global Strategy","https://global-strategy.org/feed/","global-strategy.org"],["Atalayar","https://www.atalayar.com/rss/","atalayar.com"],["Nueva Sociedad","https://nuso.org/rss/","nuso.org"],["FAES","https://fundacionfaes.org/feed/","fundacionfaes.org"],["Agenda Pública","https://agendapublica.es/feed/","agendapublica.es"],["El Confidencial · Mundo","https://rss.elconfidencial.com/mundo/","elconfidencial.com/mundo"],["Revista Ejércitos","https://www.revistaejercitos.com/feed/","revistaejercitos.com"]],
+ emp:[["Stratechery","https://stratechery.com/feed/","stratechery.com"],["Harvard Business Review","https://feeds.hbr.org/harvardbusiness","hbr.org"],["MIT Sloan Management Review","https://sloanreview.mit.edu/feed/","sloanreview.mit.edu"],["McKinsey Insights","https://www.mckinsey.com/insights/rss","mckinsey.com"],["BCG","https://www.bcg.com/rss/publications","bcg.com/publications"],["Bain & Company","https://www.bain.com/rss/insights","bain.com/insights"],["strategy+business","https://www.strategy-business.com/rss","strategy-business.com"],["Knowledge at Wharton","https://knowledge.wharton.upenn.edu/feed/","knowledge.wharton.upenn.edu"],["INSEAD Knowledge","https://knowledge.insead.edu/rss.xml","knowledge.insead.edu"],["Stanford GSB Insights","https://www.gsb.stanford.edu/insights/feed","gsb.stanford.edu/insights"],["IESE Insight","https://www.iese.edu/insight/feed/","iese.edu/insight"],["Commoncog","https://commoncog.com/rss/","commoncog.com"],["Farnam Street","https://fs.blog/feed/","fs.blog"],["Not Boring","https://www.notboring.co/feed","notboring.co"],["The Generalist","https://www.generalist.com/feed","generalist.com"],["Acquired","https://feeds.transistor.fm/acquired","acquired.fm"],["Business Breakdowns","https://www.joincolossus.com/rss/breakdowns","joincolossus.com"],["Every","https://every.to/feed","every.to"],["Trung Phan","https://www.readtrung.com/feed","readtrung.com"],["Scott Galloway","https://www.profgalloway.com/feed/","profgalloway.com"],["Benedict Evans","https://www.ben-evans.com/benedictevans?format=rss","ben-evans.com"],["Lenny's Newsletter","https://www.lennysnewsletter.com/feed","lennysnewsletter.com"],["First Round Review","https://review.firstround.com/feed.xml","review.firstround.com"],["Paul Graham","http://www.aaronsw.com/2002/feeds/pgessays.rss","paulgraham.com",5],["Net Interest","https://www.netinterest.co/feed","netinterest.co"],["The Diff","https://www.thediff.co/feed","thediff.co"],["Oaktree · Howard Marks","https://www.oaktreecapital.com/rss/insights","oaktreecapital.com/insights"],["CB Insights","https://www.cbinsights.com/research/feed/","cbinsights.com/research"],["The Hustle","https://thehustle.co/feed/","thehustle.co"],["Failory","https://www.failory.com/blog/rss.xml","failory.com"],["Petition (reestructuraciones)","https://www.petition11.com/feed","petition11.com"],["PE Hub","https://www.pehub.com/feed/","pehub.com"],["Financial Times · Companies","https://www.ft.com/companies?format=rss","ft.com/companies"],["The Economist · Business","https://www.economist.com/business/rss.xml","economist.com/business"],["WSJ · Business","https://feeds.a.dj.com/rss/WSJcomUSBusiness.xml","wsj.com/business"],["Fortune","https://fortune.com/feed/","fortune.com",15],["Fast Company","https://www.fastcompany.com/latest/rss","fastcompany.com",15],["Business Insider","https://www.businessinsider.com/rss","businessinsider.com",15],["CNBC · Business","https://www.cnbc.com/id/10001147/device/rss/rss.html","cnbc.com"],["Reuters · Business","https://www.reuters.com/business/rss","reuters.com/business"],["Les Echos · Entreprises","https://services.lesechos.fr/rss/les-echos-entreprises.xml","lesechos.fr"],["Challenges · Entreprise","https://www.challenges.fr/entreprise/rss.xml","challenges.fr/entreprise"],["L'Usine Nouvelle","https://www.usinenouvelle.com/rss/","usinenouvelle.com",15],["Harvard Business Review France","https://www.hbrfrance.fr/feed","hbrfrance.fr"],["Expansión · Empresas","https://e00-expansion.uecdn.es/rss/empresas.xml","expansion.com/empresas"],["Cinco Días · Compañías","https://cincodias.elpais.com/seccion/rss/companias/","cincodias.elpais.com/companias"],["El Economista · Empresas","https://www.eleconomista.es/rss/rss-empresas.php","eleconomista.es/empresas-finanzas"],["El Confidencial · Empresas","https://rss.elconfidencial.com/empresas/","elconfidencial.com/empresas"],["Harvard Deusto","https://www.harvard-deusto.com/rss","harvard-deusto.com"]],
+ def:[["Breaking Defense","https://breakingdefense.com/feed/","breakingdefense.com"],["Defense News","https://www.defensenews.com/arc/outboundfeeds/rss/?outputType=xml","defensenews.com"],["The War Zone","https://www.twz.com/feed","twz.com"],["Defense One","https://www.defenseone.com/rss/all/","defenseone.com"],["DefenseScoop","https://defensescoop.com/feed/","defensescoop.com"],["C4ISRNET","https://www.c4isrnet.com/arc/outboundfeeds/rss/?outputType=xml","c4isrnet.com"],["Janes","https://www.janes.com/feeds/news","janes.com"],["Naval News","https://www.navalnews.com/feed/","navalnews.com"],["Army Recognition","https://armyrecognition.com/feed","armyrecognition.com"],["The Aviationist","https://theaviationist.com/feed/","theaviationist.com"],["Army Technology","https://www.army-technology.com/feed/","army-technology.com"],["Naval Technology","https://www.naval-technology.com/feed/","naval-technology.com"],["Airforce Technology","https://www.airforce-technology.com/feed/","airforce-technology.com"],["Shephard Media","https://www.shephardmedia.com/rss/news/","shephardmedia.com"],["UK Defence Journal","https://ukdefencejournal.org.uk/feed/","ukdefencejournal.org.uk"],["European Security & Defence","https://euro-sd.com/feed/","euro-sd.com"],["EDR Magazine","https://www.edrmagazine.eu/feed","edrmagazine.eu"],["Overt Defense","https://www.overtdefense.com/feed/","overtdefense.com"],["SpaceNews · Military","https://spacenews.com/section/military/feed/","spacenews.com"],["DroneXL","https://dronexl.co/feed/","dronexl.co"],["Militarnyi (Ucrania)","https://mil.in.ua/en/feed/","mil.in.ua"],["Defence Express (Ucrania)","https://en.defence-ua.com/rss/feed.xml","en.defence-ua.com"],["DARPA","https://www.darpa.mil/rss.xml","darpa.mil"],["Defense Innovation Unit","https://www.diu.mil/rss","diu.mil"],["NATO DIANA","https://www.diana.nato.int/rss.xml","diana.nato.int"],["European Defence Agency","https://eda.europa.eu/rss/news","eda.europa.eu"],["Anduril","https://www.anduril.com/rss.xml","anduril.com"],["Helsing","https://helsing.ai/rss.xml","helsing.ai"],["Shield AI","https://shield.ai/feed/","shield.ai"],["Palantir","https://blog.palantir.com/feed","blog.palantir.com"],["Quantum Systems","https://quantum-systems.com/feed/","quantum-systems.com"],["Tekever","https://www.tekever.com/feed/","tekever.com"],["Saronic","https://www.saronic.com/rss.xml","saronic.com"],["Resilience Media","https://www.resiliencemedia.co/feed","resiliencemedia.co"],["Defense Tech and Acquisition","https://defenseacquisition.substack.com/feed","defenseacquisition.substack.com"],["CDR Salamander","https://cdrsalamander.substack.com/feed","cdrsalamander.substack.com"],["War on the Rocks","https://warontherocks.com/feed/","warontherocks.com"],["Zone Militaire (Opex360)","https://www.opex360.com/feed/","opex360.com"],["Meta-Défense","https://meta-defense.fr/feed/","meta-defense.fr"],["Forces Operations Blog","https://www.forcesoperations.com/feed/","forcesoperations.com"],["Air & Cosmos","https://air-cosmos.com/rss","air-cosmos.com"],["Infodefensa","https://www.infodefensa.com/rss","infodefensa.com"],["Defensa.com","https://www.defensa.com/rss","defensa.com"],["Galaxia Militar","https://galaxiamilitar.es/feed/","galaxiamilitar.es"],["Zona Militar","https://www.zona-militar.com/feed/","zona-militar.com"],["Revista Ejércitos","https://www.revistaejercitos.com/feed/","revistaejercitos.com"]],
+ deep:[["Sifted","https://sifted.eu/feed","sifted.eu"],["Tech.eu","https://tech.eu/feed/","tech.eu"],["EU-Startups","https://www.eu-startups.com/feed/","eu-startups.com"],["TechCrunch · Startups","https://techcrunch.com/category/startups/feed/","techcrunch.com"],["Crunchbase News","https://news.crunchbase.com/feed/","news.crunchbase.com"],["The Next Web","https://thenextweb.com/feed","thenextweb.com"],["IEEE Spectrum","https://spectrum.ieee.org/feeds/feed.rss","spectrum.ieee.org"],["MIT Technology Review","https://www.technologyreview.com/feed/","technologyreview.com"],["MIT News","https://news.mit.edu/rss/feed","news.mit.edu"],["New Atlas","https://newatlas.com/index.rss","newatlas.com"],["Interesting Engineering","https://interestingengineering.com/feed","interestingengineering.com"],["Ars Technica · Science","https://arstechnica.com/science/feed/","arstechnica.com/science"],["Singularity Hub","https://singularityhub.com/feed/","singularityhub.com"],["SemiAnalysis","https://semianalysis.com/feed/","semianalysis.com"],["The Robot Report","https://www.therobotreport.com/feed/","therobotreport.com"],["SpaceNews","https://spacenews.com/feed/","spacenews.com"],["Payload","https://payloadspace.com/feed/","payloadspace.com"],["The Quantum Insider","https://thequantuminsider.com/feed/","thequantuminsider.com"],["Canary Media","https://www.canarymedia.com/rss.rss","canarymedia.com"],["Heatmap","https://heatmap.news/feeds/feed.rss","heatmap.news"],["STAT","https://www.statnews.com/feed/","statnews.com",12],["Not Boring","https://www.notboring.co/feed","notboring.co"],["Construction Physics","https://www.construction-physics.com/feed","construction-physics.com"],["Casey Handmer","https://caseyhandmer.wordpress.com/feed/","caseyhandmer.wordpress.com"],["Works in Progress","https://worksinprogress.co/feed/","worksinprogress.co"],["a16z","https://a16z.com/feed/","a16z.com"],["Y Combinator","https://www.ycombinator.com/blog/rss","ycombinator.com/blog"],["Contrary Research","https://research.contrary.com/rss.xml","research.contrary.com"],["Hello Tomorrow","https://hello-tomorrow.org/feed/","hello-tomorrow.org"],["EIC · Consejo Europeo de Innovación","https://eic.ec.europa.eu/rss.xml","eic.ec.europa.eu"],["Hacker News","https://hnrss.org/frontpage?points=300","",20],["Maddyness","https://www.maddyness.com/feed/","maddyness.com"],["L'Usine Digitale","https://www.usine-digitale.fr/rss","usine-digitale.fr"],["Les Echos · Start-up","https://services.lesechos.fr/rss/les-echos-start-up.xml","lesechos.fr/start-up"],["Bpifrance · Big média","https://bigmedia.bpifrance.fr/rss.xml","bigmedia.bpifrance.fr"],["El Referente","https://elreferente.es/feed/","elreferente.es"],["Expansión · Startups","https://e00-expansion.uecdn.es/rss/expansion-empleo/emprendedores.xml","expansion.com/expansion-empleo/emprendedores"]],
+ res:[["The Lancet","https://rss.sciencedirect.com/publication/science/01406736","",6],["Cell","https://rss.sciencedirect.com/publication/science/00928674","",6],["Joule","https://rss.sciencedirect.com/publication/science/25424351","",6],["Chem","https://rss.sciencedirect.com/publication/science/24519294","",6],["Matter","https://rss.sciencedirect.com/publication/science/25902385","",6],["Neuron","https://rss.sciencedirect.com/publication/science/08966273","",6],["One Earth","https://rss.sciencedirect.com/publication/science/25903322","",6],["iScience","https://rss.sciencedirect.com/publication/science/25890042","",6],["Patterns","https://rss.sciencedirect.com/publication/science/26663899","",6],["Device","https://rss.sciencedirect.com/publication/science/26669986","",6],["Cell Reports Physical Science","https://rss.sciencedirect.com/publication/science/26663864","",6],["Materials Today","https://rss.sciencedirect.com/publication/science/13697021","",6],["Progress in Materials Science","https://rss.sciencedirect.com/publication/science/00796425","",6],["Acta Materialia","https://rss.sciencedirect.com/publication/science/13596454","",6],["Nano Energy","https://rss.sciencedirect.com/publication/science/22112855","",6],["Energy Storage Materials","https://rss.sciencedirect.com/publication/science/24058297","",6],["Additive Manufacturing","https://rss.sciencedirect.com/publication/science/22148604","",6],["Applied Energy","https://rss.sciencedirect.com/publication/science/03062619","",6],["Energy","https://rss.sciencedirect.com/publication/science/03605442","",6],["Renewable and Sustainable Energy Reviews","https://rss.sciencedirect.com/publication/science/13640321","",6],["Progress in Energy and Combustion Science","https://rss.sciencedirect.com/publication/science/03601285","",6],["Energy Policy","https://rss.sciencedirect.com/publication/science/03014215","",6],["Chemical Engineering Journal","https://rss.sciencedirect.com/publication/science/13858947","",6],["Journal of Cleaner Production","https://rss.sciencedirect.com/publication/science/09596526","",6],["Nuclear Engineering and Design","https://rss.sciencedirect.com/publication/science/00295493","",6],["Journal of Nuclear Materials","https://rss.sciencedirect.com/publication/science/00223115","",6],["Progress in Nuclear Energy","https://rss.sciencedirect.com/publication/science/01491970","",6],["Annals of Nuclear Energy","https://rss.sciencedirect.com/publication/science/03064549","",6],["Nuclear Engineering and Technology","https://rss.sciencedirect.com/publication/science/17385733","",6],["Fusion Engineering and Design","https://rss.sciencedirect.com/publication/science/09203796","",6],["Artificial Intelligence","https://rss.sciencedirect.com/publication/science/00043702","",6],["Neural Networks","https://rss.sciencedirect.com/publication/science/08936080","",6],["Information Fusion","https://rss.sciencedirect.com/publication/science/15662535","",6],["Pattern Recognition","https://rss.sciencedirect.com/publication/science/00313203","",6],["Expert Systems with Applications","https://rss.sciencedirect.com/publication/science/09574174","",6],["Research Policy","https://rss.sciencedirect.com/publication/science/00487333","",6],["Technovation","https://rss.sciencedirect.com/publication/science/01664972","",6],["Technological Forecasting and Social Change","https://rss.sciencedirect.com/publication/science/00401625","",6],["Journal of Manufacturing Systems","https://rss.sciencedirect.com/publication/science/02786125","",6],["Cell Press · Trends","https://www.cell.com/trends/rss","cell.com",6],["Nature","https://www.nature.com/nature.rss","",8],["Science","https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=science","",8],["Elsevier Connect","https://www.elsevier.com/connect/rss","elsevier.com/connect",8],["ScienceDaily · Top","https://www.sciencedaily.com/rss/top/science.xml","",10],["EurekAlert","https://www.eurekalert.org/rss/technology_engineering.xml","",10],["Phys.org","https://phys.org/rss-feed/breaking/","",10]],
+ ia:[["OpenAI","https://openai.com/news/rss.xml","openai.com"],["Anthropic","https://www.anthropic.com/rss.xml","anthropic.com/news"],["Google DeepMind","https://deepmind.google/blog/rss.xml","deepmind.google"],["Google · AI","https://blog.google/technology/ai/rss/","blog.google/technology/ai"],["Google Developers","https://developers.googleblog.com/feeds/posts/default","developers.googleblog.com"],["Meta AI","https://ai.meta.com/blog/rss/","ai.meta.com/blog"],["Mistral AI","https://mistral.ai/rss.xml","mistral.ai/news"],["Hugging Face · Blog","https://huggingface.co/blog/feed.xml","huggingface.co/blog"],["GitHub Blog · IA","https://github.blog/ai-and-ml/feed/","github.blog"],["GitHub Changelog","https://github.blog/changelog/feed/","github.blog/changelog"],["LangChain","https://blog.langchain.dev/rss/","blog.langchain.dev"],["LlamaIndex","https://www.llamaindex.ai/blog/feed","llamaindex.ai/blog"],["Vercel","https://vercel.com/atom","vercel.com/blog"],["Replicate","https://replicate.com/blog/rss","replicate.com/blog"],["Ollama","https://ollama.com/blog/rss.xml","ollama.com/blog"],["Cursor","https://cursor.com/changelog/rss.xml","cursor.com/changelog"],["NVIDIA Developer","https://developer.nvidia.com/blog/feed","developer.nvidia.com/blog"],["AWS · Machine Learning","https://aws.amazon.com/blogs/machine-learning/feed/","aws.amazon.com/blogs/machine-learning"],["Microsoft · AI","https://blogs.microsoft.com/ai/feed/","blogs.microsoft.com/ai"],["Simon Willison","https://simonwillison.net/atom/everything/","simonwillison.net"],["Latent Space","https://www.latent.space/feed","latent.space"],["AI News (smol.ai)","https://news.smol.ai/rss.xml","news.smol.ai"],["Import AI","https://importai.substack.com/feed","importai.substack.com"],["Interconnects","https://www.interconnects.ai/feed","interconnects.ai"],["Ahead of AI","https://magazine.sebastianraschka.com/feed","magazine.sebastianraschka.com"],["One Useful Thing","https://www.oneusefulthing.org/feed","oneusefulthing.org"],["Eugene Yan","https://eugeneyan.com/rss/","eugeneyan.com"],["Hamel Husain","https://hamel.dev/index.xml","hamel.dev"],["Chip Huyen","https://huyenchip.com/feed.xml","huyenchip.com"],["Lilian Weng","https://lilianweng.github.io/index.xml","lilianweng.github.io"],["The Decoder","https://the-decoder.com/feed/","the-decoder.com"],["TechCrunch · AI","https://techcrunch.com/category/artificial-intelligence/feed/","techcrunch.com"],["VentureBeat · AI","https://venturebeat.com/category/ai/feed/","venturebeat.com"],["Ars Technica · AI","https://arstechnica.com/ai/feed/","arstechnica.com/ai"],["The Verge · AI","https://www.theverge.com/rss/ai-artificial-intelligence/index.xml","theverge.com"],["MIT Technology Review · AI","https://www.technologyreview.com/topic/artificial-intelligence/feed","technologyreview.com"],["MarkTechPost","https://www.marktechpost.com/feed/","marktechpost.com"],["Towards Data Science","https://towardsdatascience.com/feed","towardsdatascience.com"],["DEV · AI","https://dev.to/feed/tag/ai","",15],["Hacker News · Show HN","https://hnrss.org/show?points=80","",20],["Hacker News · IA","https://hnrss.org/newest?q=AI+OR+LLM+OR+agent&points=120","",20],["Reddit · r/LocalLLaMA","https://www.reddit.com/r/LocalLLaMA/top/.rss?t=day","",15],["Reddit · r/MachineLearning","https://www.reddit.com/r/MachineLearning/top/.rss?t=day","",10],["Product Hunt","https://www.producthunt.com/feed","",20],["lablab.ai","https://lablab.ai/blog/rss.xml","lablab.ai"],["ETHGlobal","https://ethglobal.com/blog/rss.xml","ethglobal.com/showcase"]],
+ mat:[["arXiv · Finanzas cuantitativas","https://rss.arxiv.org/rss/q-fin","",10],["arXiv · Gestión de carteras","https://rss.arxiv.org/rss/q-fin.PM","",6],["arXiv · Finanzas computacionales","https://rss.arxiv.org/rss/q-fin.CP","",6],["arXiv · Finanzas matemáticas","https://rss.arxiv.org/rss/q-fin.MF","",6],["arXiv · Trading y microestructura","https://rss.arxiv.org/rss/q-fin.TR","",6],["Quantocracy","https://quantocracy.com/feed/","quantocracy.com"],["Quantpedia","https://quantpedia.com/feed/","quantpedia.com"],["Alpha Architect","https://alphaarchitect.com/feed/","alphaarchitect.com"],["AQR · Insights","https://www.aqr.com/rss/insights","aqr.com/Insights"],["Two Sigma","https://www.twosigma.com/feed/","twosigma.com/articles"],["Man Institute","https://www.man.com/insights/rss","man.com/insights"],["Risk.net · Quant","https://www.risk.net/feeds/rss/category/cutting-edge","risk.net/cutting-edge"],["Flirting with Models","https://blog.thinknewfound.com/feed/","thinknewfound.com"],["Robot Wealth","https://robotwealth.com/feed/","robotwealth.com"],["QuantInsti","https://blog.quantinsti.com/rss/","blog.quantinsti.com"],["QuantStart","https://www.quantstart.com/articles/rss/","quantstart.com/articles"],["CFA Institute · Enterprising Investor","https://blogs.cfainstitute.org/investor/feed/","blogs.cfainstitute.org/investor"],["Quanta Magazine","https://www.quantamagazine.org/feed/","quantamagazine.org"],["Terence Tao","https://terrytao.wordpress.com/feed/","terrytao.wordpress.com"],["Scott Aaronson","https://scottaaronson.blog/?feed=rss2","scottaaronson.blog"],["Gil Kalai","https://gilkalai.wordpress.com/feed/","gilkalai.wordpress.com"],["Timothy Gowers","https://gowers.wordpress.com/feed/","gowers.wordpress.com"],["John Baez · Azimuth","https://johncarlosbaez.wordpress.com/feed/","johncarlosbaez.wordpress.com"],["Xena Project (Lean)","https://xenaproject.wordpress.com/feed/","xenaproject.wordpress.com"],["Lean Community","https://leanprover-community.github.io/blog/atom.xml","leanprover-community.github.io/blog"],["Epoch AI","https://epoch.ai/blog/rss.xml","epoch.ai"],["Google DeepMind","https://deepmind.google/blog/rss.xml","deepmind.google"],["Computational Complexity","https://blog.computationalcomplexity.org/feeds/posts/default","blog.computationalcomplexity.org"],["Gödel's Lost Letter","https://rjlipton.com/feed/","rjlipton.com"],["Windows on Theory","https://windowsontheory.org/feed/","windowsontheory.org"],["Math ∩ Programming","https://www.jeremykun.com/index.xml","jeremykun.com"],["Not Even Wrong","https://www.math.columbia.edu/~woit/wordpress/?feed=rss2","math.columbia.edu/~woit"],["The Aperiodical","https://aperiodical.com/feed/","aperiodical.com"],["Plus Magazine","https://plus.maths.org/content/rss.xml","plus.maths.org"],["AMS · News","https://www.ams.org/rss/news.xml","ams.org/news"],["SIAM News","https://www.siam.org/rss/siam-news","siam.org"],["Phys.org · Mathematics","https://phys.org/rss-feed/science-news/mathematics/","phys.org"],["Phys.org · Quantum","https://phys.org/rss-feed/physics-news/quantum-physics/","phys.org"],["ScienceDaily · Mathematics","https://www.sciencedaily.com/rss/computers_math/mathematics.xml","sciencedaily.com"],["ScienceDaily · Quantum Computers","https://www.sciencedaily.com/rss/computers_math/quantum_computers.xml","sciencedaily.com"],["ScienceDaily · Encryption","https://www.sciencedaily.com/rss/computers_math/encryption.xml","sciencedaily.com"],["Quantum Frontiers (Caltech)","https://quantumfrontiers.com/feed/","quantumfrontiers.com"],["The Quantum Insider","https://thequantuminsider.com/feed/","thequantuminsider.com"],["Quantum Computing Report","https://quantumcomputingreport.com/feed/","quantumcomputingreport.com"],["IBM Quantum","https://www.ibm.com/quantum/blog/rss","ibm.com/quantum/blog"],["Google Quantum AI","https://blog.google/technology/research/rss/","blog.google/technology/research"],["NIST","https://www.nist.gov/news-events/news/rss.xml","nist.gov",12],["Schneier on Security","https://www.schneier.com/feed/atom/","schneier.com",12],["Matthew Green · Cryptography","https://blog.cryptographyengineering.com/feed/","blog.cryptographyengineering.com"],["Trail of Bits","https://blog.trailofbits.com/feed/","blog.trailofbits.com"],["Cloudflare · Research","https://blog.cloudflare.com/tag/cryptography/rss/","blog.cloudflare.com/tag/cryptography"],["Zama (FHE)","https://www.zama.ai/blog/rss.xml","zama.ai"],["IACR ePrint","https://eprint.iacr.org/rss/rss.xml","",10],["arXiv · Criptografía","https://rss.arxiv.org/rss/cs.CR","",8],["arXiv · Física cuántica","https://rss.arxiv.org/rss/quant-ph","",8],["arXiv · Aprendizaje automático","https://rss.arxiv.org/rss/cs.LG","",8],["arXiv · Teoría de números","https://rss.arxiv.org/rss/math.NT","",6],["arXiv · Combinatoria","https://rss.arxiv.org/rss/math.CO","",6],["arXiv · Optimización","https://rss.arxiv.org/rss/math.OC","",6],["Numberphile","https://www.youtube.com/feeds/videos.xml?channel_id=UCoxcjq-8xIDTYp3uz647V5A","",5],["3Blue1Brown","https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw","",5],["Gaussianos","https://www.gaussianos.com/feed/","gaussianos.com"],["Francis (Naukas)","https://francis.naukas.com/feed/","francis.naukas.com"],["El País · Café y Teoremas","https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/ciencia/cafe-y-teoremas/portada","elpais.com/ciencia/cafe-y-teoremas"],["Images des Mathématiques","https://images.math.cnrs.fr/feed","images.math.cnrs.fr"],["Pour la Science · Maths","https://www.pourlascience.fr/rss/maths.xml","pourlascience.fr/sd/mathematiques"]],
+ dep:[['Marca','https://e00-marca.uecdn.es/rss/portada.xml'],["L'Équipe",'https://dwh.lequipe.fr/api/edito/rss?path=/'],['BBC Sport','https://feeds.bbci.co.uk/sport/rss.xml'],['ESPN','https://www.espn.com/espn/rss/news'],['AS','https://feeds.as.com/mrss-s/pages/as/site/as.com/portada'],['The Guardian · Sport','https://www.theguardian.com/sport/rss'],['Mundo Deportivo','https://www.mundodeportivo.com/rss/home.xml'],['Sky Sports','https://www.skysports.com/rss/12040'],['Eurosport','https://www.eurosport.es/rss.xml']]
+};
+const BREAK=[['BBC','https://feeds.bbci.co.uk/news/world/rss.xml'],['Al Jazeera','https://www.aljazeera.com/xml/rss/all.xml'],['The Guardian','https://www.theguardian.com/world/rss'],['France 24','https://www.france24.com/es/rss'],['Le Monde','https://www.lemonde.fr/international/rss_full.xml'],['El País','https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/internacional/portada']];
+const MKTS=['es-ES','en-GB','fr-FR','en-US'];
+const STOP=new Set(("de la que el en y a los del se las por un para con no una su al lo como más pero sus le ya o este sí porque esta entre cuando muy sin sobre también me hasta hay donde quien desde todo nos durante todos uno les ni contra otros ese eso ante ellos e esto mí antes algunos qué unos yo otro otras otra él tanto esa estos mucho quienes nada muchos cual poco ella estar estas algunas algo nosotros tras según así será sido tiene tienen había hace hacer puede pueden dice dijo años año hoy ayer nuevo nueva nuevos primer primera tres dos mientras cada parte solo sólo fue han ser son está están era the of and to in is that for it as was with be by on not he this are or his from at which but have an had they you were their one all we can her has there been if more when will would who so no out up into than them only its time some could these two may then other new now such like our over also back after use how first well way even want because any give most says said year years just about what being while where much many very make made those should still last amid per via vs le les des du un une et est que qui dans pour pas sur au aux avec ce ces se ne son sa ses plus par il elle ils elles nous vous leur leurs mais ou où donc ni car si tout tous toute toutes être avoir fait faire été sont ont cette cet entre après avant sous sans chez dont comme aussi très bien encore peut selon deux trois contre depuis ans lors face dit dès http https www com").split(' '));
+
+/* ───────── utils ───────── */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hash=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36)};
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+const toks=s=>{const o=[];for(const w of norm(s||'').split(/[^a-z0-9]+/)){if(w.length>3&&!STOP.has(w)&&!/^\d+$/.test(w))o.push(w)}return o};
+const now=()=>Date.now();
+const day=()=>new Date().toISOString().slice(0,10);
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const safeUrl=u=>/^https?:\/\//i.test(u||'')?u:'';
+function ago(ts){const m=Math.max(0,(now()-ts)/6e4);if(m<1)return 'ahora';if(m<60)return `hace ${Math.round(m)} min`;const h=m/60;if(h<24)return `hace ${Math.round(h)} h`;const d=h/24;if(d<30)return `hace ${Math.round(d)} d`;return new Date(ts).toLocaleDateString('es')}
+function plain(html){if(!html)return '';if(!/[<&]/.test(html))return html.trim();const d=new DOMParser().parseFromString('<body>'+html,'text/html');d.querySelectorAll('script,style').forEach(e=>e.remove());return (d.body.textContent||'').replace(/\s+/g,' ').trim()}
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200)}
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+
+/* ───────── native bridge ───────── */
+let _n=0;const _p={};
+function nfetch(url,opt){opt=opt||{};return new Promise(res=>{
+  if(!window.Native){res({ok:false,status:0,text:''});return}
+  const id='r'+(++_n);const t=setTimeout(()=>{if(_p[id]){delete _p[id];res({ok:false,status:0,text:''})}},opt.timeout||22000);
+  _p[id]=r=>{clearTimeout(t);res(r)};
+  try{Native.fetch(id,url,opt.method||'GET',opt.body||'',JSON.stringify(opt.headers||{}))}catch(e){clearTimeout(t);delete _p[id];res({ok:false,status:0,text:''})}
+})}
+function wfetch(url){return new Promise(res=>{if(!window.Native||!Native.wfetch){res({ok:false,status:0,text:''});return}
+  const id='w'+(++_n);const t=setTimeout(()=>{if(_p[id]){delete _p[id];res({ok:false,status:0,text:''})}},40000);_p[id]=r=>{clearTimeout(t);res(r)};
+  try{Native.wfetch(id,url)}catch(e){clearTimeout(t);delete _p[id];res({ok:false,status:0,text:''})}})}
+window.__web=(id,status,text,finalUrl)=>{const f=_p[id];if(!f)return;delete _p[id];f({ok:status>=200&&status<300,status,text:text||'',url:finalUrl||''})};
+if(!window.Native&&window.PULSO&&window.PULSO.proxy){const CFG=window.PULSO,jar={},dom=u=>{try{return new URL(u).hostname.split('.').slice(-2).join('.')}catch(e){return ''}};
+  window.Native={web:true,
+    fetch(id,url,method,body,headers){let h={};try{h=JSON.parse(headers||'{}')}catch(e){}const d=dom(url);if(jar[d])h.Cookie=Object.keys(jar[d]).map(k=>k+'='+jar[d][k]).join('; ');
+      fetch(CFG.proxy,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+CFG.key,apikey:CFG.key},body:JSON.stringify({url,method,body,headers:h})}).then(r=>r.json()).then(j=>{(j.setCookie||[]).forEach(c=>{const m=/^([^=;]+)=([^;]*)/.exec(c);if(m)(jar[d]=jar[d]||{})[m[1].trim()]=m[2]});window.__web(id,j.status|0,j.text,j.url||url)}).catch(()=>window.__web(id,0,'',url))},
+    openUrl(u){window.open(u,'_blank','noopener')},
+    share(t,u){if(navigator.share)navigator.share({title:t,url:u}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(u).then(()=>toast('Enlace copiado'))},
+    saveFile(name,content){const f=new File([content],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f]}).catch(()=>{});return}const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=name;document.body.appendChild(a);a.click();a.remove()}}}
+window.__nat=(id,status,b64,finalUrl)=>{const f=_p[id];if(!f)return;delete _p[id];let text='';try{const bin=atob(b64||'');const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);text=new TextDecoder().decode(u)}catch(e){}f({ok:status>=200&&status<300,status,text,url:finalUrl||''})};
+
+/* ───────── profile ───────── */
+let P=null,PID=null,saveT=null;
+function blankTab(){return {kw:{},src:{},seen:{},st:{v:0,o:0,s:0,sec:0,skip:0}}}
+function blank(name){const p={v:1,name,created:now(),last:now(),tabs:{},saved:[],days:{},tickers:[],off:{},custom:{},soc:{x:true,in:true},x:{},ai:{key:'',model:'',free:true}};TABS.forEach(t=>p.tabs[t.id]=blankTab());return p}
+function heal(p){const b=blank(p.name||'Yo');for(const k in b)if(p[k]==null)p[k]=b[k];TABS.forEach(t=>{p.tabs[t.id]=Object.assign(blankTab(),p.tabs[t.id]||{});p.tabs[t.id].st=Object.assign(blankTab().st,p.tabs[t.id].st||{})});if(p.ai.model==='gemini-flash-latest')p.ai.model='';if(p.ai.free==null)p.ai.free=true;return p}
+function save(soon){clearTimeout(saveT);const go=()=>{if(P&&PID){P.last=now();if(!LS.set('pulso.p.'+PID,P)){prune(true);LS.set('pulso.p.'+PID,P)}}};if(soon)go();else saveT=setTimeout(go,900)}
+function prune(hard){TABS.forEach(t=>{const T_=P.tabs[t.id];const ks=Object.keys(T_.kw);const cap=hard?250:500;if(ks.length>cap*1.3){ks.sort((a,b)=>Math.abs(T_.kw[b])-Math.abs(T_.kw[a]));ks.slice(cap).forEach(k=>delete T_.kw[k])}const ss=Object.keys(T_.seen);const sc=hard?1200:3500;if(ss.length>sc*1.2){ss.sort((a,b)=>T_.seen[b]-T_.seen[a]);ss.slice(sc).forEach(k=>delete T_.seen[k])}});const ds=Object.keys(P.days).sort();while(ds.length>60)delete P.days[ds.shift()]}
+function decay(){const d=Math.floor((now()-(P.decayAt||P.created))/864e5);if(d<1)return;const f=Math.pow(.97,Math.min(d,60));TABS.forEach(t=>{const T_=P.tabs[t.id];for(const k in T_.kw){T_.kw[k]*=f;if(Math.abs(T_.kw[k])<.05)delete T_.kw[k]}for(const k in T_.src)T_.src[k]*=f});P.decayAt=now()}
+function bump(tab,k,n){P.tabs[tab].st[k]+=n;const d=P.days[day()]||(P.days[day()]={v:0,o:0,sec:0});if(k in d)d[k]+=n;save()}
+
+/* ───────── learning ───────── */
+function feats(it){if(it._f)return it._f;const s=new Set(toks(it.t));toks((it.d||'').slice(0,160)).slice(0,10).forEach(w=>s.add(w));return it._f=[...s]}
+function learn(tab,it,w){if(!w)return;const T_=P.tabs[tab];for(const f of feats(it))T_.kw[f]=clamp((T_.kw[f]||0)+w*.5,-6,14);T_.src[it.src]=clamp((T_.src[it.src]||0)+w*.4,-6,10);save()}
+function affinity(tab,it){const kw=P.tabs[tab].kw,f=feats(it);if(!f.length)return 0;let s=0;for(const k of f)s+=kw[k]||0;return Math.tanh(s/Math.sqrt(f.length)/3)}
+function score(tab,it,prev){const c=TAB[tab],age=Math.max(0,(now()-it.ts)/36e5);
+  let s=1.2*Math.exp(-age/c.hl)+1.0*affinity(tab,it)+.45*Math.tanh((P.tabs[tab].src[it.src]||0)/3)+(it.img?.08:0)+(it.k?.35:0)+Math.random()*.14;
+  if(prev.includes(it.src))s-=.45;return s}
+function topKw(tab,n){const kw=P.tabs[tab].kw;return Object.keys(kw).filter(k=>kw[k]>.8).sort((a,b)=>kw[b]-kw[a]).slice(0,n)}
+
+/* ───────── feeds ───────── */
+const S={};TABS.forEach(t=>S[t.id]={pool:new Map(),shown:new Set(),cards:[],cur:-1,t0:0,loading:0,lastDisc:0,qi:0,relax:false,el:null,loader:null,boot:false});
+const feedState={};
+function feedsFor(tab){const base=FEEDS[tab].map(f=>({n:f[0],u:f[1],s:f[2],m:f[3]})).concat((SPECIAL[tab]||[]).map(f=>Object.assign({},f)));const cus=(P.custom[tab]||[]).map(f=>({n:f.n,u:f.u,c:1}));return base.concat(cus)}
+function qn(el,names){for(const n of names){const e=el.getElementsByTagName(n)[0];if(e)return e}return null}
+function parseFeed(xml,srcName,tab,bing,lim){
+  const out=[];let doc;try{doc=new DOMParser().parseFromString(xml,'text/xml')}catch(e){return out}
+  if(!doc||doc.getElementsByTagName('parsererror').length){try{doc=new DOMParser().parseFromString(xml.replace(/&(?!(amp|lt|gt|quot|apos|#\d+|#x[0-9a-f]+);)/gi,'&amp;'),'text/xml')}catch(e){return out}}
+  let nodes=[...doc.getElementsByTagName('item')];if(!nodes.length)nodes=[...doc.getElementsByTagName('entry')];
+  for(const n of nodes.slice(0,lim||45)){
+    const tEl=qn(n,['title']);const title=plain(tEl?tEl.textContent:'');if(!title||title.length<8)continue;
+    let link='';const ls=[...n.getElementsByTagName('link')];
+    for(const l of ls){const h=l.getAttribute('href');if(h&&(!l.getAttribute('rel')||l.getAttribute('rel')==='alternate')){link=h;break}if(!h&&l.textContent.trim()){link=l.textContent.trim();break}}
+    if(!link){const g=qn(n,['guid','id']);if(g)link=g.textContent.trim()}
+    let src=srcName;
+    if(bing){const m=/[?&]url=([^&]+)/.exec(link);if(m){try{link=decodeURIComponent(m[1])}catch(e){}}const se=qn(n,['News:Source']);if(se&&se.textContent.trim())src=se.textContent.trim()}
+    link=safeUrl(link);if(!link)continue;
+    const dEl=qn(n,['content:encoded','description','summary','content']);const raw=dEl?dEl.textContent:'';
+    let desc=plain(raw).slice(0,700);if(desc===title)desc='';
+    const dt=qn(n,['pubDate','published','updated','dc:date','date']);let ts=dt?Date.parse(dt.textContent.trim()):NaN;if(isNaN(ts)){const pd=/Publication date:\s*(?:Available online\s*)?(\d{1,2} \w+ \d{4}|\w+ \d{4})/.exec(desc);ts=pd?Date.parse(pd[1]):NaN;if(pd)desc=desc.replace(/Publication date:.*?Source:\s*/,'').replace(/Author\(s\):/,' · ')}if(isNaN(ts))ts=now()-6*36e5;if(ts>now()+36e5)ts=now();
+    let img='';const mc=[...n.getElementsByTagName('media:content'),...n.getElementsByTagName('media:thumbnail')];
+    let bw=-1;for(const m of mc){const u=m.getAttribute('url');if(!u)continue;const ty=m.getAttribute('type')||m.getAttribute('medium')||'';if(/video|audio/.test(ty))continue;const w=+m.getAttribute('width')||0;if(w>bw){bw=w;img=u}}
+    if(!img){for(const e of n.getElementsByTagName('enclosure')){if(/image/.test(e.getAttribute('type')||'')||/\.(jpe?g|png|webp)/i.test(e.getAttribute('url')||'')){img=e.getAttribute('url');break}}}
+    if(!img&&bing){const bi=qn(n,['News:Image']);if(bi){img=bi.textContent.trim();if(img&&!/[?&]w=/.test(img))img+='&w=700&h=440&c=14'}}
+    if(!img){const m=/<img[^>]+src=["']([^"']+)["']/i.exec(raw);if(m&&!/pixel|track|feedburner|1x1|emoji|gravatar/i.test(m[1]))img=m[1].replace(/&amp;/g,'&')}
+    if(img&&img.startsWith('//'))img='https:'+img;img=safeUrl(img);
+    out.push({id:hash(norm(title).slice(0,90)),t:title,u:link,d:desc,img,src,ts,tab});
+  }
+  return out}
+function addItems(tab,items){const st=S[tab],c=TAB[tab];let n=0;for(const it of items){if((now()-it.ts)/36e5>(it.soc?Math.min(c.max,120):c.max))continue;if(st.pool.has(it.id)){const o=st.pool.get(it.id);if(!o.img&&it.img)o.img=it.img;continue}st.pool.set(it.id,it);n++}return n}
+async function pull(tab,f,bing){const r=await nfetch(f.u,{timeout:16000,headers:f.h||{}});let items=[],via='';if(r.ok){try{items=f.k?SPARSE[f.k](r.text,tab,f.n):parseFeed(r.text,f.n,tab,bing,f.m)}catch(e){}}
+  if(!items.length&&!bing&&f.s){const dom=f.s.split('/')[0],own=i=>hostOf(i.u).endsWith(dom);
+    let b=await nfetch('https://www.bing.com/news/search?q='+encodeURIComponent('site:'+f.s)+'&format=rss',{timeout:12000});
+    if(b.ok)items=parseFeed(b.text,f.n,tab,true).filter(own).map(i=>(i.src=f.n,i));
+    if(!items.length){b=await nfetch('https://www.bing.com/search?q='+encodeURIComponent('site:'+f.s)+'&format=rss',{timeout:12000});
+      if(b.ok)items=parseFeed(b.text,f.n,tab).filter(i=>own(i)&&i.u.replace(/^https?:\/\/[^/]+/,'').length>18).map(i=>{if(now()-i.ts<7*36e5)i.ts=now()-40*36e5;return i})}
+    if(items.length)via='búsqueda'}
+  if(!bing)feedState[f.u]={ok:items.length>0,at:now(),n:items.length,code:r.status,via};const n=addItems(tab,items);if(n&&tab===active)fill(tab);return n}
+async function refreshTab(tab,force){const st=S[tab];if(st.loading)return;st.loading=1;mark();
+  const fs=feedsFor(tab).filter(f=>!P.off[f.u]&&(force||!feedState[f.u]||now()-feedState[f.u].at>8*6e4));
+  pullSocial(tab);await Promise.all(fs.map(f=>pull(tab,f)));st.loading=0;mark();cache(tab);fill(tab)}
+async function discover(tab){const st=S[tab];if(now()-st.lastDisc<25000)return;st.lastDisc=now();
+  const c=TAB[tab],ks=topKw(tab,8),qs=[];
+  if(ks.length>=2){const a=ks[Math.floor(Math.random()*Math.min(4,ks.length))];let b=ks[Math.floor(Math.random()*ks.length)];qs.push((a===b?a:a+' '+b)+(c.hint?' '+c.hint:''))}
+  if(ks.length){qs.push(ks[st.qi%ks.length]+(c.hint?' '+c.hint:''))}
+  qs.push(c.base[st.qi%c.base.length]);st.qi++;
+  const mk=MKTS[st.qi%MKTS.length];
+  refreshTab(tab,false);socialSearch(tab);
+  await Promise.all([...new Set(qs)].map((q,i)=>pull(tab,{n:'Bing News',u:'https://www.bing.com/news/search?q='+encodeURIComponent(q)+'&format=rss&setmkt='+(i===2?MKTS[(st.qi+1)%MKTS.length]:mk)},true)));
+  cache(tab);fill(tab)}
+function cache(tab){const a=[...S[tab].pool.values()].sort((x,y)=>y.ts-x.ts).slice(0,70).map(i=>({id:i.id,t:i.t,u:i.u,d:(i.d||'').slice(0,300),img:i.img,src:i.src,ts:i.ts,tab:i.tab,soc:i.soc,k:i.k,au:i.au,full:i.full?i.full.slice(0,900):undefined}));LS.set('pulso.c.'+tab,a)}
+function mark(){$('#refresh').classList.toggle('spin',!!S[active].loading)}
+
+/* ───────── GitHub, Hugging Face y hackatones ───────── */
+const d14=()=>new Date(now()-14*864e5).toISOString().slice(0,10);
+const GHH={Accept:'application/vnd.github+json'},XHR={Accept:'application/json, text/html;q=0.9','X-Requested-With':'XMLHttpRequest'};
+const SPECIAL={ia:[
+ {n:'GitHub Trending · hoy',u:'https://github.com/trending?since=daily',k:'ght'},
+ {n:'GitHub Trending · Python',u:'https://github.com/trending/python?since=daily',k:'ght'},
+ {n:'GitHub Trending · TypeScript',u:'https://github.com/trending/typescript?since=daily',k:'ght'},
+ {n:'GitHub Trending · semana',u:'https://github.com/trending?since=weekly',k:'ght'},
+ {n:'GitHub · repos nuevos de IA',get u(){return 'https://api.github.com/search/repositories?q='+encodeURIComponent('ai OR llm OR agent created:>'+d14()+' stars:>150')+'&sort=stars&order=desc&per_page=30'},k:'gha',h:GHH},
+ {n:'GitHub · repos nuevos',get u(){return 'https://api.github.com/search/repositories?q='+encodeURIComponent('created:>'+d14()+' stars:>400')+'&sort=stars&order=desc&per_page=20'},k:'gha',h:GHH},
+ {n:'Hugging Face · modelos en tendencia',u:'https://huggingface.co/api/models?sort=trendingScore&direction=-1&limit=25',k:'hfm'},
+ {n:'Hugging Face · Spaces en tendencia',u:'https://huggingface.co/api/spaces?sort=trendingScore&direction=-1&limit=20',k:'hfs'},
+ {n:'Devpost · ganadores de hackatones',u:'https://devpost.com/software/search?query=is%3Awinner',k:'dvp',h:XHR},
+ {n:'Devpost · ganadores con IA',u:'https://devpost.com/software/search?query=ai+is%3Awinner',k:'dvp',h:XHR},
+ {n:'Devpost · proyectos en tendencia',u:'https://devpost.com/software/trending',k:'dvp',h:XHR}]};
+const kfmt=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':String(n||0);
+function proj(key,title,desc,meta,u,img,src,ts,tab){desc=(desc||'').replace(/\s+/g,' ').trim();return {id:hash(key.toLowerCase()),t:title+(desc?': '+desc.slice(0,170):''),u,d:meta,img:safeUrl(img),src,ts:ts||now()-3*36e5,tab,k:'proj'}}
+const SPARSE={
+ ght(html,tab,label){const d=new DOMParser().parseFromString(html,'text/html'),out=[];d.querySelectorAll('article.Box-row,article').forEach(a=>{const l=a.querySelector('h2 a,h1 a');if(!l)return;const full=(l.getAttribute('href')||'').replace(/^\//,'');if(!/^[\w.-]+\/[\w.-]+$/.test(full))return;
+   const desc=(a.querySelector('p')||{}).textContent||'',lang=((a.querySelector('[itemprop="programmingLanguage"]')||{}).textContent||'').trim(),stars=((a.querySelector('a[href$="/stargazers"]')||{}).textContent||'').trim(),m=[...a.querySelectorAll('span')].map(e=>/^\s*([\d,.]+)\s+stars?\s+(today|this week)\s*$/.exec(e.textContent||'')).find(Boolean);
+   out.push(proj('gh'+full,full,desc,[stars?'★ '+stars:'',m?'+'+m[1]+(m[2]==='today'?' hoy':' esta semana'):'',lang].filter(Boolean).join(' · '),'https://github.com/'+full,'https://opengraph.githubassets.com/1/'+full,label,0,tab))});return out},
+ gha(txt,tab,label){return (JSON.parse(txt).items||[]).map(r=>proj('gh'+r.full_name,r.full_name,r.description,['★ '+kfmt(r.stargazers_count),'creado '+ago(Date.parse(r.created_at)),r.language].filter(Boolean).join(' · '),r.html_url,'https://opengraph.githubassets.com/1/'+r.full_name,label,Math.min(now(),Date.parse(r.pushed_at)||now()),tab))},
+ hfm(txt,tab,label){return JSON.parse(txt).map(m=>{const id=m.id||m.modelId;return proj('hf'+id,id,'modelo '+(m.pipeline_tag||'').replace(/-/g,' '),['♥ '+kfmt(m.likes),'↓ '+kfmt(m.downloads)].join(' · '),'https://huggingface.co/'+id,'https://cdn-thumbnails.huggingface.co/social-thumbnails/models/'+id+'.png',label,Date.parse(m.createdAt)||0,tab)})},
+ hfs(txt,tab,label){return JSON.parse(txt).map(m=>proj('hfs'+m.id,m.id,(m.cardData&&(m.cardData.short_description||m.cardData.title))||'demo interactiva','♥ '+kfmt(m.likes),'https://huggingface.co/spaces/'+m.id,'https://cdn-thumbnails.huggingface.co/social-thumbnails/spaces/'+m.id+'.png',label,Date.parse(m.createdAt)||0,tab))},
+ dvp(txt,tab,label){const out=[],abs=u=>u&&u.startsWith('//')?'https:'+u:u;
+   if(/^\s*\{/.test(txt)){for(const p of (JSON.parse(txt).software||[]))out.push(proj('dp'+p.url,p.name,p.tagline,[p.winner?'🏆 Ganador':'',p.like_count?'♥ '+p.like_count:''].filter(Boolean).join(' · '),p.url,abs(p.photo),label,0,tab));return out}
+   const d=new DOMParser().parseFromString(txt,'text/html');d.querySelectorAll('.gallery-item,[data-software-id]').forEach(g=>{const a=g.querySelector('a.link-to-software,a[href*="/software/"]');if(!a)return;const name=((g.querySelector('h5')||{}).textContent||'').trim();if(!name)return;
+     out.push(proj('dp'+a.href,name,(g.querySelector('.tagline,p')||{}).textContent,g.querySelector('.winner,[alt*="inner"]')?'🏆 Ganador':'',a.getAttribute('href'),abs((g.querySelector('img')||{}).getAttribute&&g.querySelector('img').getAttribute('src')),label,0,tab))});return out}};
+async function readme(it){let m=/^https:\/\/github\.com\/([\w.-]+\/[\w.-]+)$/.exec(it.u),r=null;
+  if(m){r=await nfetch('https://api.github.com/repos/'+m[1]+'/readme',{headers:{Accept:'application/vnd.github.raw+json'},timeout:12000});if(!r.ok)r=await nfetch('https://raw.githubusercontent.com/'+m[1]+'/HEAD/README.md',{timeout:12000})}
+  else if(/^https:\/\/huggingface\.co\//.test(it.u))r=await nfetch(it.u+'/raw/main/README.md',{timeout:12000});
+  if(!r||!r.ok)return null;
+  return r.text.replace(/^---[\s\S]*?---/,'').replace(/```[\s\S]*?```/g,' ').replace(/!\[[^\]]*\]\([^)]*\)/g,' ').replace(/\[([^\]]*)\]\([^)]*\)/g,'$1').replace(/<[^>]+>/g,' ').replace(/[#*`>|_~]+/g,' ').replace(/\s+/g,' ').trim().slice(0,9000)}
+
+/* ───────── X y LinkedIn ───────── */
+const XACC={gen:['Reuters','AP','BBCBreaking','afpfr','el_pais','lemondefr'],fin:['markets','FT','elerianm','LizAnnSonders','zerohedge','expansioncom','WSJmarkets'],nuc:['W_Nuclear_News','iaeaorg','OperadorNuclear','energybants','ANS_org','rafaelmgrossi','OECD_NEA','WorldNuclear','NEI','GovNuclear','NRCgov','SFENorg','ForoNuclear','EDFofficiel','Framatome_','iterorg','TerraPower','NuScale_Power','RollsRoyceSMR','cameconews','Dr_Keefer','isabelleboemeke','MadiHilly'],geo:['ianbremmer','RichardHaass','MacaesBruno','anneapplebaum','TheStudyofWar','adam_tooze','stephenWalt','KofmanMichael','nfergus','carlbildt','ischinger','RnaudBertrand','FukuyamaFrancis','GerardAraud','PascalBoniface','BrunoTertrais','legrandcontinent','geoestratego','elOrdenMundial','descifraguerra','rielcano','JosepBorrellF'],emp:['benthompson','TrungTPhan','profgalloway','benedictevans','HarvardBiz','McKinsey','lennysan','AcquiredFM','morganhousel','matt_levine','packyM'],def:['anduriltech','PalmerLuckey','HelsingAI','shieldaitech','BreakingDefense','DefenseOne','DARPA','DIU_x','RALee85','sambendett','navalnewscom','Defensa_com','opex360'],deep:['Siftedeu','IEEESpectrum','techreview','CaseyHandmer','packyM','a16z','CFS_energy','Helion_Energy','BostonDynamics','Figure_robot','SpaceX','EUeic'],res:['ScienceDirect','ElsevierConnect','CellPressNews','TheLancet','Nature','ScienceMagazine'],ia:['karpathy','simonw','swyx','AnthropicAI','OpenAIDevs','GoogleDeepMind','huggingface','LangChainAI','cursor_ai','_akhaliq','hwchase17','jerryjliu0','rauchg','levelsio','mckaywrigley','ollama','github'],mat:['quantocracy','alphaarchitect','AQRCapital','QuantaMagazine','3blue1brown','stevenstrogatz','johncarlosbaez','fermatslibrary','AlexKontorovich','JDHamkins','preskill','matthew_d_green','leanprover','EpochAIResearch'],dep:['FabrizioRomano','marca','lequipe','ESPN','SkySportsNews']};
+const NITTER=['nitter.mie.foundation','nitter.kareem.one','nitter.tiekoetter.com','nitter.privacyredirect.com'];
+const xState={},socState={x:null,in:null};let xRot=0;const socBusy={};
+function xAcc(tab){return (P.x&&P.x[tab])||XACC[tab]}
+function srcLabel(it){return it.soc==='x'?'X · '+it.src:it.soc==='in'?'LinkedIn · '+it.src:it.src}
+function post(soc,text,u,src,au,ts,img,tab){const full=plain(text).slice(0,1500);return {id:hash(soc+norm(full).slice(0,90)),t:full.length>300?full.slice(0,297)+'…':full,full,u,d:'',img:img||'',src,au,ts,tab,soc}}
+function parseSyn(txt,tab){const out=[];let j=null;const m=/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/.exec(txt||'');try{j=JSON.parse(m?m[1]:txt)}catch(e){return out}
+  const es=((((j||{}).props||{}).pageProps||{}).timeline||{}).entries||[];
+  for(const e of es){const t=e&&e.content&&e.content.tweet;if(!t)continue;const u=t.user||{};const text=(t.full_text||t.text||'').replace(/https:\/\/t\.co\/\w+/g,'').replace(/\s+/g,' ').trim();if(text.length<25)continue;
+    const sn=u.screen_name||'',id=t.id_str||t.conversation_id_str;if(!sn||!id)continue;const ts=Date.parse(t.created_at);const med=((t.extended_entities||t.entities||{}).media||[])[0];
+    out.push(post('x',text,'https://x.com/'+sn+'/status/'+id,'@'+sn,u.name||sn,isNaN(ts)?now():ts,med?safeUrl(med.media_url_https):'',tab))}
+  return out}
+async function pullX(tab,h){const url='https://syndication.twitter.com/srv/timeline-profile/screen-name/'+encodeURIComponent(h);let items=[],via='';
+  let r=await nfetch(url,{timeout:12000,headers:{Referer:'https://platform.twitter.com/'}});if(r.ok)items=parseSyn(r.text,tab);if(items.length)via='directo';
+  if(!items.length){r=await wfetch(url);if(r.ok)items=parseSyn(r.text,tab);if(items.length)via='navegador'}
+  if(!items.length){for(let k=0;k<2&&!items.length;k++){const inst=NITTER[(xRot+k)%NITTER.length];r=await nfetch('https://'+inst+'/'+encodeURIComponent(h)+'/rss',{timeout:10000});
+    if(r.ok){items=parseFeed(r.text,'@'+h,tab).map(i=>post('x',i.t,i.u.replace(/^https?:\/\/[^/]+/,'https://x.com').replace(/#m$/,''),'@'+h,h,i.ts,i.img,tab));if(items.length)via='nitter'}}xRot++}
+  xState[h]={at:now(),ok:items.length>0,via,n:items.length};const n=addItems(tab,items);if(n&&tab===active)fill(tab);return n}
+async function pullSocial(tab){if(!P.soc.x||socBusy[tab])return;socBusy[tab]=1;
+  const acc=xAcc(tab).filter(h=>!xState[h]||now()-xState[h].at>12*6e4).sort((a,b)=>((xState[a]||{}).at||0)-((xState[b]||{}).at||0)).slice(0,4);for(const h of acc){await pullX(tab,h)}socBusy[tab]=0;if(acc.length)cache(tab)}
+function toPost(net,i,tab){
+  if(net==='x'){const m=/^https?:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\/([A-Za-z0-9_]{1,15})\/status\/(\d+)/.exec(i.u);if(!m)return null;return post('x',i.d&&i.d.length>40?i.d:i.t,'https://x.com/'+m[1]+'/status/'+m[2],'@'+m[1],m[1],i.ts,'',tab)}
+  if(!/^https?:\/\/([a-z]{2,3}\.)?linkedin\.com\/(posts|pulse|news)\//.test(i.u))return null;
+  const au=(i.t.split(/ on LinkedIn| en LinkedIn| sur LinkedIn|\s[|–-]\s/)[0]||'LinkedIn').trim().slice(0,40)||'LinkedIn';
+  return post('in',/\/pulse\/|\/news\//.test(i.u)?i.t+(i.d?'. '+i.d:''):(i.d&&i.d.length>40?i.d:i.t),i.u,au,au,i.ts,'',tab)}
+async function socialSearch(tab){const c=TAB[tab],st=S[tab],ks=topKw(tab,6);
+  const topic=(ks.length&&st.qi%2)?ks[st.qi%ks.length]+(c.hint?' '+c.hint:''):c.base[st.qi%c.base.length];const jobs=[];
+  if(P.soc.x)jobs.push(['x','site:x.com '+topic]);if(P.soc.in)jobs.push(['in','site:linkedin.com '+topic]);
+  await Promise.all(jobs.map(async j=>{const r=await nfetch('https://www.bing.com/search?q='+encodeURIComponent(j[1])+'&format=rss&setmkt='+MKTS[st.qi%MKTS.length],{timeout:14000});
+    let items=[];if(r.ok)items=parseFeed(r.text,'',tab).map(i=>toPost(j[0],i,tab)).filter(Boolean);socState[j[0]]={at:now(),ok:items.length>0,n:items.length,code:r.status};addItems(tab,items)}));
+  if(jobs.length)fill(tab)}
+
+/* ───────── feed UI ───────── */
+let active='gen',paused=false;
+const IC={save:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>',share:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/></svg>',nope:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg>'};
+function candidates(tab){const st=S[tab],seen=P.tabs[tab].seen,o=[];for(const it of st.pool.values()){if(st.shown.has(it.id))continue;if(!st.relax&&seen[it.id])continue;o.push(it)}return o}
+function pickNext(tab){const st=S[tab],c=candidates(tab);if(!c.length)return null;
+  const prev=st.cards.slice(-2).map(x=>x.it.src);
+  if(Math.random()<.12&&c.length>8){const r=c.sort((a,b)=>b.ts-a.ts).slice(0,Math.ceil(c.length*.5));return r[Math.floor(Math.random()*r.length)]}
+  let best=null,bs=-1e9;for(const it of c){const s=score(tab,it,prev);if(s>bs){bs=s;best=it}}return best}
+function isSaved(id){return P.saved.some(s=>s.id===id)}
+function cardEl(it,tab){const a=document.createElement('article');a.className='card'+(it.img?'':' noimg')+(it.soc?' post':'');const ph=it.soc==='x'?'X':it.soc==='in'?'in':it.src.slice(0,2);a.dataset.id=it.id;
+  a.innerHTML=`<div class="bg"${it.img?` style="background-image:url('${esc(encodeURI(decodeURI(it.img)).replace(/'/g,'%27'))}')"`:''}></div>
+  <div class="inner"><div class="pic">${it.img?`<img loading="lazy" referrerpolicy="no-referrer" src="${esc(it.img)}" alt="">`:`<span>${esc(ph)}</span>`}</div>
+  <div class="meta"><span class="src">${esc(srcLabel(it))}</span><span>${ago(it.ts)}</span></div>
+  <h2>${esc(it.t)}</h2>${it.d?`<p class="desc">${esc(it.d)}</p>`:''}<div class="hint">${it.soc?'Toca para ver el post completo':it.k?'Toca para ver qué hace y qué puedes construir':it.tab==='emp'?'Toca para ver el caso y sus lecciones':'Toca para ver resumen e implicaciones'}</div></div>
+  <div class="rail"><button data-a="save" class="${isSaved(it.id)?'on':''}">${IC.save}</button><button data-a="share">${IC.share}</button><button data-a="nope">${IC.nope}</button></div>`;
+  const im=a.querySelector('img');if(im)im.onerror=()=>{a.classList.add('noimg');a.querySelector('.bg').style.backgroundImage='';a.querySelector('.pic').innerHTML=`<span>${esc(ph)}</span>`;it.img=''};
+  return a}
+function fill(tab){const st=S[tab];if(!st.el)return;let guard=0;
+  while(st.cards.length-1-st.cur<3&&guard++<6){const it=pickNext(tab);if(!it)break;st.shown.add(it.id);const el=cardEl(it,tab);st.el.insertBefore(el,st.loader);st.cards.push({it,el});io.observe(el)}
+  const left=candidates(tab).length;
+  st.loader.querySelector('span').textContent=st.loading?'Buscando noticias…':'Buscando más noticias para ti…';
+  if(left<8)discover(tab);
+  if(!left&&st.cards.length-1-st.cur<1&&!st.loading&&now()-st.lastDisc>4000&&st.pool.size){st.relax=true}
+  if(st.cur<0&&st.cards.length){st.el.scrollTop=0;setCur(tab,0)}}
+function closeDwell(tab){const st=S[tab];if(st.cur<0||!st.t0)return;const c=st.cards[st.cur];if(!c)return;const dt=(now()-st.t0)/1000;st.t0=0;if(dt<.35)return;
+  const T_=P.tabs[tab];if(!T_.seen[c.it.id]){T_.seen[c.it.id]=Math.floor(now()/864e5);bump(tab,'v',1)}
+  bump(tab,'sec',Math.min(dt,90));
+  if(c.acted)return;
+  if(dt<1.3){learn(tab,c.it,-.35);T_.st.skip++}else if(dt>=3)learn(tab,c.it,Math.min(1.5,dt/8))}
+function setCur(tab,i){const st=S[tab];if(i===st.cur)return;closeDwell(tab);st.cur=i;st.t0=(tab===active&&!paused)?now():0;fill(tab)}
+const io=new IntersectionObserver(es=>{for(const e of es){if(e.intersectionRatio<.6)continue;const f=e.target.parentElement;if(!f)continue;const tab=f.dataset.tab;if(tab!==active)continue;const i=S[tab].cards.findIndex(c=>c.el===e.target);if(i>=0)setCur(tab,i)}},{threshold:[.6]});
+function pause(v){if(v===paused)return;paused=v;const st=S[active];if(v)closeDwell(active);else if(st.cur>=0)st.t0=now()}
+function buildFeeds(){const m=$('#feeds');m.innerHTML='';$('#tabs').innerHTML=TABS.map(t=>`<button data-t="${t.id}">${t.name}</button>`).join('');
+  TABS.forEach(t=>{const f=document.createElement('section');f.className='feed';f.dataset.tab=t.id;f.hidden=true;f.style.setProperty('--acc',t.color);
+    const l=document.createElement('div');l.className='loader';l.innerHTML='<div class="dot"></div><span>Buscando noticias…</span>';f.appendChild(l);m.appendChild(f);
+    Object.assign(S[t.id],{pool:new Map(),shown:new Set(),cards:[],cur:-1,t0:0,loading:0,lastDisc:0,relax:false,el:f,loader:l,boot:false});
+    addItems(t.id,LS.get('pulso.c.'+t.id,[]));
+    let x0=0,y0=0;f.addEventListener('touchstart',e=>{x0=e.touches[0].clientX;y0=e.touches[0].clientY},{passive:true});
+    f.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;if(Math.abs(dx)>80&&Math.abs(dy)<45){const i=TABS.findIndex(q=>q.id===active)+(dx<0?1:-1);if(TABS[i])show(TABS[i].id)}},{passive:true});
+    f.addEventListener('click',e=>{const card=e.target.closest('.card');if(!card)return;const c=S[t.id].cards.find(q=>q.el===card);if(!c)return;const b=e.target.closest('.rail button');
+      if(!b){openDetail(c.it,t.id,c);return}
+      const a=b.dataset.a;if(a==='save'){toggleSave(c.it,t.id);c.acted=true;b.classList.toggle('on',isSaved(c.it.id))}
+      else if(a==='share'){try{Native.share(c.it.t,c.it.u)}catch(_){}learn(t.id,c.it,1);c.acted=true}
+      else if(a==='nope'){learn(t.id,c.it,-3);c.acted=true;toast('Entendido: menos como esta');const nx=S[t.id].cards[S[t.id].cur+1];if(nx)nx.el.scrollIntoView({behavior:'smooth'})}})})}
+function show(tab){if(S[active])closeDwell(active);active=tab;const c=TAB[tab];document.documentElement.style.setProperty('--acc',c.color);
+  $$('#tabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===tab);if(b.dataset.t===tab)b.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})});
+  $$('.feed').forEach(f=>f.hidden=f.dataset.tab!==tab);
+  const st=S[tab];if(st.cur>=0)st.t0=now();
+  if(!st.boot){st.boot=true;fill(tab);refreshTab(tab,true)}else{fill(tab);if(!st.loading)refreshTab(tab,false)}
+  banner();mark()}
+
+/* ───────── banners ───────── */
+let quotes={},qAt=0,crumb='',brk=[],brkAt=0;
+function fcap(x,cur){if(!x)return '';const s=cur==='EUR'?'€':cur==='USD'?'$':cur==='GBP'||cur==='GBp'?'£':'';const f=(n,d)=>n.toLocaleString('es',{maximumFractionDigits:d,minimumFractionDigits:d});
+  if(x>=1e12)return f(x/1e12,2)+' B'+s;if(x>=1e9)return f(x/1e9,1)+' mM'+s;if(x>=1e6)return f(x/1e6,0)+' M'+s;return f(x,0)+s}
+async function loadQuotes(force){if(!P.tickers.length)return;if(!force&&now()-qAt<60000)return;qAt=now();const syms=P.tickers.map(t=>t.s);
+  let got=false;
+  try{if(!crumb){await nfetch('https://fc.yahoo.com/',{timeout:8000});const c=await nfetch('https://query2.finance.yahoo.com/v1/test/getcrumb',{timeout:8000});if(c.ok&&c.text&&c.text.length<40&&!/</.test(c.text))crumb=c.text.trim()}
+    if(crumb){const r=await nfetch('https://query1.finance.yahoo.com/v7/finance/quote?symbols='+encodeURIComponent(syms.join(','))+'&crumb='+encodeURIComponent(crumb),{timeout:10000});
+      if(r.ok){const j=JSON.parse(r.text);for(const q of j.quoteResponse.result){quotes[q.symbol]={p:q.regularMarketPrice,ch:q.regularMarketChangePercent,cap:q.marketCap,vol:q.regularMarketVolume,cur:q.currency};got=true}}else crumb=''}}catch(e){crumb=''}
+  await Promise.all(syms.filter(s=>!quotes[s]||(!got&&now()-(quotes[s].at||0)>50000)).map(async s=>{try{const r=await nfetch('https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(s)+'?range=1d&interval=1d',{timeout:10000});if(!r.ok)return;const m=JSON.parse(r.text).chart.result[0].meta;const pc=m.chartPreviousClose||m.previousClose;quotes[s]=Object.assign(quotes[s]||{},{vol:m.regularMarketVolume,p:m.regularMarketPrice,ch:pc?(m.regularMarketPrice/pc-1)*100:0,cur:m.currency,at:now()})}catch(e){}}));
+  if(active==='fin')banner()}
+async function loadBreak(){if(now()-brkAt<4*6e4)return;brkAt=now();const all=[];await Promise.all(BREAK.map(async f=>{const r=await nfetch(f[1],{timeout:14000});if(r.ok)parseFeed(r.text,f[0],'geo').forEach(i=>all.push(i))}));
+  if(all.length){const seen=new Set();brk=all.sort((a,b)=>b.ts-a.ts).filter(i=>!seen.has(i.id)&&seen.add(i.id)).slice(0,14)}if(active==='geo')banner()}
+function banner(){const b=$('#banner');let h='',n=0;
+  if(active==='fin'){
+    if(!P.tickers.length)h='<span class="tag">MERCADO</span><span class="cta" data-a="tick">+ Elige las acciones de tu banner</span>';
+    else{const sym=c=>c==='EUR'?'€':c==='USD'?'$':c==='GBP'?'£':c==='GBp'?'p':c?' '+c:'',num=(x,d)=>x.toLocaleString('es',{maximumFractionDigits:d,minimumFractionDigits:d});
+      const fvol=v=>v>=1e9?num(v/1e9,2)+' mM':v>=1e6?num(v/1e6,1)+' M':v>=1e3?num(v/1e3,0)+' k':num(v,0);
+      const one=P.tickers.map(t=>{const q=quotes[t.s];if(!q||q.p==null)return `<span data-a="tick"><b>${esc(t.s)}</b><span class="dim">…</span></span>`;const up=q.ch>=0;
+        return `<span data-a="tick"><b>${esc(t.s)}</b><span>${num(q.p,q.p<10?3:2)}${sym(q.cur)}</span><span class="${up?'up':'dn'}">${up?'▲':'▼'} ${Math.abs(q.ch||0).toFixed(2).replace('.',',')}%</span>${q.vol?`<span class="dim">Vol</span><span>${fvol(q.vol)}</span>`:''}${q.cap?`<span class="dim">Cap</span><span>${fcap(q.cap,q.cur)}</span>`:''}</span>`}).join('');
+      n=P.tickers.length;h=`<span class="tag">MERCADO</span><div class="run" style="animation-duration:${Math.max(18,n*9)}s">${one}${one}${n<3?one+one:''}</div>`}
+    loadQuotes()}
+  else if(active==='geo'){
+    if(!brk.length)h='<span class="tag">ÚLTIMA HORA</span><span class="cta">Cargando titulares…</span>';
+    else{const one=brk.map((i,k)=>`<span data-b="${k}"><b>${esc(i.src)}</b>${esc(i.t)}<span class="dim">· ${ago(i.ts)}</span></span>`).join('');h=`<span class="tag">ÚLTIMA HORA</span><div class="run" style="animation-duration:${brk.length*9}s">${one}${one}</div>`}
+    loadBreak()}
+  b.hidden=!h;b.innerHTML=h;document.documentElement.style.setProperty('--ban',h?'34px':'0px')}
+$('#banner').addEventListener('click',e=>{const a=e.target.closest('[data-a]'),k=e.target.closest('[data-b]');if(a){openDrawer('conf','tick')}else if(k){const it=brk[+k.dataset.b];if(it)openDetail(it,'geo',null)}});
+setInterval(()=>{if(!P||paused||document.hidden)return;if(active==='fin')loadQuotes();if(active==='geo')loadBreak()},30000);
+
+/* ───────── summary ───────── */
+const CUE=/\b(implica\w*|supon\w+|significa\w*|consecuencia\w*|impacto|afecta\w*|podr[ií]a\w*|riesgo\w*|amenaza\w*|prev[eé]\w*|se espera|obliga\w*|permitir[aá]\w*|abre la puerta|por lo que|de cara a|could|would|expected|means|impact\w*|risk\w*|threat\w*|likely|implication\w*|consequence\w*|as a result|paves the way|warn\w*|raises|devrait|devraient|pourrait|pourraient|risque\w*|cons[eé]quence\w*|signifie|implique|menace\w*|permettra|entra[iî]ne|pr[eé]voit)\b/i;
+let SPLIT=null;try{SPLIT=new RegExp('(?<=[.!?…]["»”’)]?)\\s+(?=[A-ZÁÉÍÓÚÑÀÂÇÈÉÊÎÔÛ«"“¿¡0-9])')}catch(e){}
+function splitS(t){t=t.replace(/\s+/g,' ');const a=SPLIT?t.split(SPLIT):(t.match(/[^.!?…]+[.!?…]+["»”’)]?|[^.!?…]+$/g)||[]);return a.map(s=>s.trim()).filter(Boolean)}
+function extract(html){const d=new DOMParser().parseFromString(html,'text/html');
+  const og=d.querySelector('meta[property="og:image"],meta[name="twitter:image"]');const img=og?safeUrl(og.getAttribute('content')):'';
+  const md=d.querySelector('meta[property="og:description"],meta[name="description"]');const mdesc=md?(md.getAttribute('content')||'').trim():'';
+  d.querySelectorAll('script,style,noscript,nav,footer,header,aside,form,figure,figcaption,iframe,svg,button,ul,ol').forEach(e=>e.remove());
+  const pl=c=>[...c.querySelectorAll('p')].reduce((s,p)=>s+p.textContent.length,0);
+  let best=null,bl=0;d.querySelectorAll('article,main,[itemprop="articleBody"],[class*="article-body"],[class*="article__content"],[class*="article__body"],[class*="post-content"],[class*="entry-content"]').forEach(c=>{const l=pl(c);if(l>bl){bl=l;best=c}});
+  if(bl<500)best=d.body;
+  const ps=best?[...best.querySelectorAll('p')].map(p=>p.textContent.replace(/\s+/g,' ').trim()).filter(t=>t.length>70&&!/cookies|suscr[ií]b|newsletter|subscribe|sign up|abonn|©|all rights reserved|derechos reservados|inicia sesi[oó]n/i.test(t)):[];
+  return {text:ps.join(' ').slice(0,30000),img,mdesc}}
+function analyse(text,title){const all=splitS(text),sents=all.filter(s=>s.length>45&&s.length<400);if(sents.length<2)return null;
+  const tf={};sents.forEach(s=>toks(s).forEach(t=>tf[t]=(tf[t]||0)+1));const tt=new Set(toks(title));
+  const sc=sents.map((s,i)=>{const ts=toks(s);if(ts.length<4)return 0;let x=0;ts.forEach(t=>{x+=tf[t];if(tt.has(t))x+=2});x/=Math.pow(ts.length,.6);return x*(i<2?1.4:i<5?1.12:1)});
+  const idx=sents.map((_,i)=>i).sort((a,b)=>sc[b]-sc[a]);const pick=[];
+  for(const i of idx){if(pick.length>=4)break;const a=new Set(toks(sents[i]));if(pick.some(j=>{const b=toks(sents[j]);return b.filter(w=>a.has(w)).length/Math.max(1,b.length)>.6}))continue;pick.push(i)}
+  pick.sort((a,b)=>a-b);const used=new Set(pick);
+  const imp=sents.map((s,i)=>({i,s,x:used.has(i)?-1:((CUE.test(s)?2.2:0)+(/\d/.test(s)?.5:0)+(/[%€$£]|millon|million|billion|milliard/i.test(s)?.5:0))*(1+sc[i]/(sc[idx[0]]||1))})).filter(o=>o.x>=2.2).sort((a,b)=>b.x-a.x).slice(0,3).sort((a,b)=>a.i-b.i).map(o=>o.s);
+  const ent={};(text.match(/\b[A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúñàâçèéêîôû'’-]+(?:\s+(?:de |del |of |du )?[A-ZÁÉÍÓÚÑ][\wáéíóúñàâçèéêîôû'’-]+){0,3}/g)||[]).forEach(e=>{if(e.length<4||STOP.has(norm(e)))return;ent[e]=(ent[e]||0)+1});
+  const ents=Object.keys(ent).filter(e=>ent[e]>1).sort((a,b)=>ent[b]*Math.sqrt(b.length)-ent[a]*Math.sqrt(a.length)).filter((e,_,a)=>!a.some(o=>o!==e&&o.includes(e)&&ent[o]>=ent[e]*.6)).slice(0,7);
+  return {sum:pick.map(i=>sents[i]),imp,ents}}
+/* ───────── redactor IA (clave gratuita) ───────── */
+let AI={key:null,prov:'',cands:[],ok:''};
+function provOf(k){return /^gsk_/.test(k)?'groq':/^sk-or-/.test(k)?'openrouter':'gemini'}
+async function aiSetup(){const k=P.ai.key;if(AI.key===k&&AI.cands.length)return AI;AI={key:k,prov:provOf(k),cands:[],ok:'',err:''};const c=[];if(P.ai.model)c.push(P.ai.model);
+  try{if(AI.prov==='gemini'){const r=await nfetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200',{headers:{'x-goog-api-key':k},timeout:12000});if(!r.ok)AI.err='HTTP '+r.status;
+      const l=(JSON.parse(r.text).models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')).map(m=>m.name.replace('models/','')).filter(n=>/^gemini-.*flash/.test(n)&&!/image|tts|audio|live|embed|native|computer|robot/.test(n));
+      const ver=n=>parseFloat((/gemini-(\d+(?:\.\d+)?)/.exec(n)||[0,0])[1]),lite=n=>/lite/.test(n)?1:0;l.sort((a,b)=>lite(a)-lite(b)||ver(b)-ver(a)||a.length-b.length);
+      const full=l.filter(n=>!lite(n)).slice(0,2),lt=l.filter(lite).slice(0,2);c.push(...full,...lt,'gemini-flash-latest','gemini-flash-lite-latest')}
+    else{const base=AI.prov==='groq'?'https://api.groq.com/openai/v1':'https://openrouter.ai/api/v1';const r=await nfetch(base+'/models',{headers:{Authorization:'Bearer '+k},timeout:12000});if(!r.ok)AI.err='HTTP '+r.status;
+      let l=(JSON.parse(r.text).data||[]).map(m=>m.id);
+      if(AI.prov==='groq'){l=l.filter(n=>!/whisper|guard|tts|speech|embed|safeguard|compound|allam|orpheus/i.test(n));const pr=n=>/70b|versatile|120b/.test(n)?0:/qwen|kimi|gpt-oss|llama-4|maverick/.test(n)?1:2;l.sort((a,b)=>pr(a)-pr(b));c.push(...l.slice(0,4),'llama-3.3-70b-versatile')}
+      else{l=l.filter(n=>/:free$/.test(n));const pr=n=>/llama|gemini|deepseek|qwen|mistral|gemma/.test(n)?0:1;l.sort((a,b)=>pr(a)-pr(b));c.push(...l.slice(0,5))}}}catch(e){if(AI.prov==='gemini')c.push('gemini-flash-latest','gemini-flash-lite-latest');else if(AI.prov==='groq')c.push('llama-3.3-70b-versatile')}
+  AI.cands=[...new Set(c)];return AI}
+async function aiCall(model,prompt,json){const k=P.ai.key;
+  if(AI.prov==='gemini'){const g={temperature:.3};if(json)g.responseMimeType='application/json';
+    const r=await nfetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':k},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:g}),timeout:40000});
+    if(!r.ok)return {err:r.status};try{return {text:JSON.parse(r.text).candidates[0].content.parts.map(p=>p.text||'').join('')}}catch(e){return {err:'vacío'}}}
+  const base=AI.prov==='groq'?'https://api.groq.com/openai/v1':'https://openrouter.ai/api/v1';
+  const r=await nfetch(base+'/chat/completions',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+k},body:JSON.stringify({model,temperature:.3,messages:[{role:'user',content:prompt}]}),timeout:40000});
+  if(!r.ok)return {err:r.status};try{return {text:JSON.parse(r.text).choices[0].message.content||''}}catch(e){return {err:'vacío'}}}
+let pollAt=0;
+async function pollCall(prompt,json,alive){for(;;){const w=15500-(now()-pollAt);if(w<=0)break;await new Promise(r=>setTimeout(r,Math.min(w,1500)));if(alive&&!alive())return null}pollAt=now();
+  const msg=[{role:'user',content:prompt}],H={'Content-Type':'application/json'},ok=t=>t&&t.length>20&&!/^\s*</.test(t);
+  let r=await nfetch('https://text.pollinations.ai/openai',{method:'POST',headers:H,body:JSON.stringify({model:'openai',messages:msg,temperature:.3,jsonMode:!!json,private:true}),timeout:50000});
+  if(r.ok){try{const t=JSON.parse(r.text).choices[0].message.content;if(ok(t))return t}catch(e){if(ok(r.text))return r.text}}
+  r=await nfetch('https://text.pollinations.ai/',{method:'POST',headers:H,body:JSON.stringify({model:'openai',messages:msg,jsonMode:!!json,private:true}),timeout:50000});
+  if(r.ok&&ok(r.text))return r.text;AI.err=(P.ai.key?AI.err+' · ':'')+'IA sin clave: HTTP '+r.status;return null}
+const aiOn=()=>!!(P.ai.key||P.ai.free);
+async function llm(prompt,json,alive){
+  if(P.ai.key){const a=await aiSetup();const order=a.ok?[a.ok,...a.cands.filter(m=>m!==a.ok)]:a.cands;let last='';
+    for(const m of order.slice(0,4)){const r=await aiCall(m,prompt,json);if(r.text){a.ok=m;return {text:r.text.replace(/<think>[\s\S]*?<\/think>/g,'').trim(),model:m}}last=r.err;if(r.err===401||r.err===403)break}
+    a.err='HTTP '+last;if(a.ok&&last!==429)a.ok=''}
+  if(P.ai.free){const t=await pollCall(prompt,json,alive);if(t)return {text:t.trim(),model:'IA sin clave · Pollinations'}}
+  return null}
+const arr=x=>Array.isArray(x)?x.map(String).filter(Boolean):(x?[String(x)]:[]);
+const hostOf=u=>{try{return new URL(u).hostname.replace(/^www\./,'')}catch(e){return ''}};
+async function related(it){const T=new Set(toks(it.soc?(it.full||it.t).slice(0,160):it.t));if(T.size<3)return {arts:[],snips:[]};
+  const raw=(it.soc?(it.full||it.t).slice(0,120):it.t).replace(/https?:\S+/g,' ').replace(/[“”"«»'’:|–—()\[\]-]+/g,' ').split(/\s+/).filter(Boolean),low=' '+norm(it.t)+' ';
+  const cnt=re=>(low.match(re)||[]).length,en=cnt(/ (the|and|of|to|in|for|is|on) /g),fr=cnt(/ (le|la|les|des|du|et|un|une|est) /g),es=cnt(/ (el|la|los|las|de|del|y|en|que|un|una) /g);
+  const mk=en>fr&&en>es?'en-US':fr>es?'fr-FR':'es-ES',host=hostOf(it.u);
+  const search=async q=>{const r=await nfetch('https://www.bing.com/news/search?q='+encodeURIComponent(q)+'&format=rss&setmkt='+mk,{timeout:11000});return r.ok?parseFeed(r.text,'',it.tab,true):[]};
+  let c=await search(raw.slice(0,12).join(' '));if(c.length<2)c=c.concat(await search([...T].slice(0,5).join(' ')));
+  const need=Math.max(2,Math.min(3,Math.ceil(T.size*.35))),seen=new Set([host]);
+  const pick=c.map(i=>({i,h:hostOf(i.u),ov:new Set(toks(i.t+' '+i.d).filter(w=>T.has(w))).size})).filter(o=>o.h&&o.ov>=need&&!/msn\.com|bing\.com/.test(o.h)).sort((a,b)=>b.ov-a.ov).filter(o=>!seen.has(o.h)&&seen.add(o.h)).slice(0,5);
+  const arts=[];await Promise.all(pick.map(async o=>{const r=await nfetch(o.i.u,{timeout:9000});if(!r.ok)return;try{const x=extract(r.text);if(x.text.length>600)arts.push({src:o.i.src||o.h,u:o.i.u,t:o.i.t,ov:o.ov,text:x.text.slice(0,5000)})}catch(e){}}));
+  arts.sort((a,b)=>b.ov-a.ov);
+  return {arts:arts.slice(0,3),snips:pick.filter(o=>o.i.d&&o.i.d.length>60).slice(0,5).map(o=>({src:o.i.src||o.h,u:o.i.u,t:o.i.t,d:o.i.d}))}}
+async function redact(it,text,rel,alive){rel=rel||{arts:[],snips:[]};let src='';const own=(text||it.full||it.d||'').slice(0,7000);
+  if(own)src+=`[Fuente original: ${srcLabel(it)}]\n${own}\n\n`;
+  rel.arts.forEach((a,i)=>{src+=`[Otra fuente ${i+1}: ${a.src}] ${a.t}\n${a.text.slice(0,3500)}\n\n`});
+  if(src.length<1500)rel.snips.forEach(x=>{src+=`[Extracto: ${x.src}] ${x.t}. ${x.d}\n`});
+  const thin=src.length<500;
+  const kind=(it.soc?`Es una publicación de ${it.soc==='x'?'X (Twitter)':'LinkedIn'} de ${it.au||it.src}. Explica qué dice y el contexto necesario para entenderla.`:'Con todas las fuentes que te doy, redacta la noticia ampliada, clara y neutral; si las fuentes se contradicen, dilo.')+(thin?' Las fuentes son muy escasas: redacta lo poco que consta sin adornarlo y apóyate en tu conocimiento solo para el análisis.':'');
+  const P1=it.k==='proj'?`Eres un ingeniero de IA que explica proyectos a otro desarrollador. Esto es un proyecto (repositorio, modelo o ganador de hackatón). Escribe en español.
+Con la documentación que te doy rellena: "entradilla" = qué es en 1-2 frases; "cuerpo" = cómo funciona y qué hace exactamente (2-3 párrafos cortos); "claves" = 3-4 datos prácticos (stack, requisitos, licencia, cómo empezar). No inventes funciones que no consten.
+En el análisis razona tú: "significado" = qué se puede construir con esto hoy (2-3 frases concretas); "origen" = quién lo hace y sobre qué tecnología se apoya; "causas" = por qué está ganando tracción ahora; "desenlaces" = 2 o 3 proyectos que un desarrollador solo podría montar con ello, con "escenario" = nombre del proyecto, "que_pasaria" = cómo hacerlo en 1-2 frases y "probabilidad" = dificultad: "baja", "media" o "alta".
+Devuelve SOLO un JSON: {"entradilla":"","cuerpo":[""],"claves":[""],"significado":[""],"origen":"","causas":[""],"desenlaces":[{"escenario":"","que_pasaria":"","probabilidad":""}]}
+
+Proyecto: ${it.t}
+Datos: ${it.d||''}
+Documentación y fuentes:
+${src||'(sin documentación, solo el título)'}`:null;
+  const P2=(!P1&&it.tab==='emp'&&!it.soc)?`Eres profesor de estrategia de una escuela de negocios y redactor. Con las fuentes que te doy, cuenta el caso en español para alguien que quiere aprender de negocios.
+"entradilla" = lo esencial en 1-2 frases; "cuerpo" = qué ha pasado (2-4 párrafos cortos); "claves" = 3-4 datos (cifras, fechas, actores). En estos tres campos usa SOLO lo que dicen las fuentes, sin inventar cifras.
+En el análisis razona tú con tu conocimiento, sin dar hipótesis por hechos: "significado" = la jugada estratégica: qué decisión hay detrás y qué busca la empresa (2-3 frases); "origen" = cómo llegó la empresa hasta aquí (antecedentes, situación competitiva); "causas" = por qué funcionó o por qué falló, 2-4 razones de fondo (modelo de negocio, costes, timing, ejecución, competencia); "desenlaces" = 2 o 3 lecciones aplicables a otras empresas, con "escenario" = la lección en pocas palabras, "que_pasaria" = cómo aplicarla y cuándo no vale, y "probabilidad" = "".
+Devuelve SOLO un JSON: {"entradilla":"","cuerpo":[""],"claves":[""],"significado":[""],"origen":"","causas":[""],"desenlaces":[{"escenario":"","que_pasaria":"","probabilidad":""}]}
+
+Titular: ${it.t}
+Fuentes:
+${src||'(sin texto disponible, solo el titular)'}`:null;
+  const prompt=P1||P2||`Eres redactor y analista de un diario de referencia. ${kind} Escribe en español aunque el original esté en otro idioma.
+Reglas: en "entradilla", "cuerpo" y "claves" usa SOLO lo que dicen las fuentes, sin inventar datos, cifras ni citas. En el análisis ("significado", "origen", "causas", "desenlaces") razona tú con tu conocimiento del contexto: es interpretación, no hechos del artículo; sé concreto, nombra actores, y no des por seguro lo que es hipótesis. Si no sabes algo, dilo en vez de inventarlo.
+Devuelve SOLO un JSON con esta forma:
+{"entradilla":"1-2 frases con lo esencial","cuerpo":["2 a 4 párrafos cortos"],"claves":["3 o 4 puntos clave"],"significado":["2-3 frases: qué podría significar esto y para quién"],"origen":"2-3 frases: de dónde viene el problema, antecedentes","causas":["2-4 causas de fondo, una por elemento"],"desenlaces":[{"escenario":"nombre corto","que_pasaria":"1-2 frases","probabilidad":"alta, media o baja"}]}
+Da 2 o 3 desenlaces distintos entre sí. El análisis es obligatorio: nunca dejes vacíos "significado", "origen", "causas" ni "desenlaces".
+
+Titular: ${it.soc?'':it.t}
+Fuentes:
+${src||'(sin texto disponible, solo el titular)'}`;
+  const r=await llm(prompt,true,alive);if(!r)return null;try{const t=r.text,o=JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1));
+    const out=(Array.isArray(o.desenlaces)?o.desenlaces:[]).map(d=>typeof d==='string'?{n:'',t:d,p:''}:{n:String(d.escenario||''),t:String(d.que_pasaria||d.descripcion||''),p:String(d.probabilidad||'').toLowerCase()}).filter(d=>d.t||d.n).slice(0,4);
+    const an={ai:r.model,lead:String(o.entradilla||''),body:arr(o.cuerpo),sum:arr(o.claves),mean:arr(o.significado),origin:arr(o.origen).join(' '),causes:arr(o.causas),out,imp:arr(o.implicaciones),ents:[]};
+    if(an.body.length||an.sum.length||an.lead||an.mean.length)return an}catch(e){}return null}
+
+/* ───────── detail sheet ───────── */
+let D=null;
+function overlay(){const on=$('#sheet').classList.contains('on')||$('#drawer').classList.contains('on');$('#scrim').classList.toggle('on',on);pause(on)}
+function renderDetail(){if(!D)return;const it=D.it,a=it.an,body=$('#sbody'),soc=it.soc,sk='<div class="sk" style="width:96%"></div><div class="sk" style="width:88%"></div><div class="sk" style="width:70%"></div>';
+  let h=`${it.img?`<img class="hero" referrerpolicy="no-referrer" src="${esc(it.img)}" onerror="this.remove()">`:''}<div class="meta"><span class="src">${esc(srcLabel(it))}</span><span>${ago(it.ts)}</span></div>`;
+  h+=soc?`<p class="ptext">${esc(it.full||it.t)}</p>`:`<h3>${esc(it.t)}</h3>`;
+  if(D.aiWait)h+='<div class="sec">Implicaciones · análisis de la IA</div><p class="note">Redactando con '+(it.rel&&it.rel.length?it.rel.length+' fuentes más':'las fuentes disponibles')+'…'+(P.ai.key?'':' Sin clave puede tardar unos 15 s.')+'</p>'+sk;
+  if(a&&a.ai){
+    if(a.sum.length)h+=`<div class="sec">Claves</div><ul class="sum">${a.sum.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`;
+    const A=(a.mean&&a.mean.length)||a.origin||(a.causes&&a.causes.length)||(a.out&&a.out.length);
+    const L=(it.tab==='emp'&&!it.soc&&!it.k)?['La jugada','Cómo llegó hasta aquí','Por qué funcionó o falló','Lecciones que te llevas','','Caso de negocio · análisis de la IA']:it.k==='proj'?['Qué puedes construir','De dónde sale','Por qué está despegando','Ideas para montar tú','dificultad','Para qué sirve · análisis de la IA']:['Qué podría significar','De dónde viene','Causas','Posibles desenlaces','prob.','Implicaciones · análisis de la IA'];
+    if(A){h+='<div class="sec">'+L[5]+'</div>';
+      if(a.mean&&a.mean.length)h+=`<div class="blk"><b>${L[0]}</b>${a.mean.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`;
+      if(a.origin)h+=`<div class="blk"><b>${L[1]}</b><p>${esc(a.origin)}</p></div>`;
+      if(a.causes&&a.causes.length)h+=`<div class="blk"><b>${L[2]}</b><ul>${a.causes.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`;
+      if(a.out&&a.out.length)h+=`<div class="blk"><b>${L[3]}</b>${a.out.map(d=>`<div class="sce">${d.n?`<span>${esc(d.n)}</span>`:''}${/^(alta|media|baja)/.test(d.p)?`<em class="p-${d.p.slice(0,1)}">${L[4]} ${esc(d.p.match(/^(alta|media|baja)/)[0])}</em>`:''}<p>${esc(d.t)}</p></div>`).join('')}</div>`;
+      h+='<p class="note" style="margin-top:8px">Interpretación del modelo con su conocimiento general, no hechos del artículo.</p>'}
+    else if(a.imp.length)h+=`<div class="sec">Implicaciones</div><ul class="imp">${a.imp.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`;
+    if(a.lead||a.body.length)h+=`<div class="sec">${soc?'Contexto':it.k?'Qué es y cómo funciona':'La noticia, redactada'}</div>${a.lead?`<p class="lead">${esc(a.lead)}</p>`:''}${a.body.map(s=>`<p class="bodyp">${esc(s)}</p>`).join('')}`;
+    h+=`<p class="note">Redactado por IA (${esc(a.ai===true?'modelo':a.ai)}) a partir de ${it.rel&&it.rel.length?'la fuente original y otras '+it.rel.length:'la fuente original'}. Contrasta con las fuentes.</p>`}
+  else if(soc){
+    if(D.loading)h+='<div class="sec">Contexto</div>'+sk;
+    else if(!D.aiWait)h+=`<p class="note" style="margin-top:14px">${aiOn()?'La IA no ha respondido ahora ('+esc(AI.err||'sin respuesta')+').':'Activa la IA en Ajustes para ver contexto e implicaciones de cada post.'}</p>`}
+  else{
+    h+='<div class="sec">Resumen</div>';
+    if(a)h+=`<ul class="sum">${a.sum.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`;
+    else if(D.loading)h+=(it.d?`<p class="note" style="font-size:15px;color:#f4f1eae0">${esc(it.d)}</p>`:'')+'<p class="note">Leyendo el artículo y buscando otras fuentes…</p>'+sk;
+    else h+=`<p class="note" style="font-size:15px;color:#f4f1eae0">${esc(it.d||'Este medio no permite leer el texto desde la app.')}</p><p class="note">Ni el original ni otras fuentes dejaron leer el texto completo.</p>`;
+    if(!D.aiWait){h+='<div class="sec">Implicaciones</div>';
+      if(a&&a.imp.length)h+=`<ul class="imp">${a.imp.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`;
+      else if(D.loading)h+='<div class="sk" style="width:92%"></div><div class="sk" style="width:64%"></div>';
+      else h+=`<p class="note">${aiOn()?'La IA no ha respondido ahora ('+esc(AI.err||'sin respuesta')+') y las fuentes no recogen consecuencias explícitas. Vuelve a abrir la noticia en unos segundos.':'Las fuentes no recogen consecuencias explícitas. Activa la IA en Ajustes para tenerlas siempre.'}</p>`}
+    if(a&&!D.aiWait)h+=`<p class="note" style="margin-top:10px">Frases extraídas de ${it.rel&&it.rel.length?'las fuentes':'la fuente'}, sin reescribir.</p>`}
+  if(it.rel&&it.rel.length)h+='<div class="sec">Otras fuentes</div>'+it.rel.map((r,k)=>`<div class="row" data-rel="${k}"><div class="g" style="white-space:normal"><b style="font-size:12px;color:var(--acc)">${esc(r.src)}</b><small style="font-size:13.5px;color:#f4f1eae0;white-space:normal">${esc(r.t)}</small></div><span style="color:var(--mute)">↗</span></div>`).join('');
+  if(a&&a.ents&&a.ents.length){h+='<div class="sec">Seguir tema</div><div class="chips">'+a.ents.map(e=>`<button data-e="${esc(e)}" class="${(D.fol||[]).includes(e)?'on':''}">${esc(e)}</button>`).join('')+'</div>'}
+  if(aiOn()&&!D.loading&&!D.aiWait){h+='<div class="sec">Pregunta al redactor</div>'+D.qa.map(q=>`<div class="qa"><b>${esc(q.q)}</b>${q.a==null?'<div class="sk" style="width:80%;margin:4px 0 0"></div>':esc(q.a)}</div>`).join('')+'<div class="ask"><input class="field" id="askq" placeholder="¿Qué quieres saber?" autocomplete="off"><button class="btn sm" id="askgo">Enviar</button></div>'}
+  body.innerHTML=h;
+  $('#sfoot').innerHTML=`<button class="sq ${isSaved(it.id)?'on':''}" data-a="save">${IC.save}</button><button class="sq" data-a="share">${IC.share}</button><button class="btn" data-a="open">${soc==='x'?'Abrir en X':soc==='in'?'Abrir en LinkedIn':it.k?'Abrir el proyecto':'Leer en '+esc(it.src)}</button>`}
+async function openDetail(it,tab,c){D={it,tab,t0:now(),loading:!it.an,fol:[],qa:[]};if(c)c.acted=true;learn(tab,it,2);bump(tab,'o',1);
+  const T_=P.tabs[tab];if(!T_.seen[it.id]){T_.seen[it.id]=Math.floor(now()/864e5);bump(tab,'v',1)}
+  renderDetail();$('#sbody').scrollTop=0;$('#sheet').classList.add('on');overlay();
+  if(it.an&&(it.an.ai||!aiOn()))return;
+  const live=()=>D&&D.it===it;
+  const own=(async()=>{if(it.soc==='x')return it.full||it.t;let text='';if(it.k==='proj'){const rd=await readme(it).catch(()=>null);if(rd&&rd.length>200)return rd}const r=await nfetch(it.u,{timeout:13000});
+    if(r.ok&&r.text){try{const x=extract(r.text);text=x.text;if(!it.img&&x.img&&!it.soc)it.img=x.img;if(!it.d&&x.mdesc&&!it.soc)it.d=x.mdesc.slice(0,500)}catch(e){}}
+    if(it.soc&&text.length<300)text=it.full||it.t;return text})();
+  const [text,rel]=await Promise.all([own,related(it).catch(()=>({arts:[],snips:[]}))]);
+  it.rel=rel.arts.map(a=>({src:a.src,u:a.u,t:a.t})).concat(rel.snips.filter(x=>!rel.arts.some(a=>a.u===x.u)).map(x=>({src:x.src,u:x.u,t:x.t}))).slice(0,5);
+  const all=[text].concat(rel.arts.map(a=>a.text)).filter(Boolean).join(' ');it._text=all.slice(0,14000);
+  let an=null;
+  if(!it.soc){if(all.length>400)an=analyse(all,it.t);
+    if(!an){const sn=[it.d].concat(rel.snips.map(x=>x.d)).filter(Boolean).join(' ');const ss=splitS(sn).filter(x=>x.length>40);if(ss.length)an={sum:ss.slice(0,4),imp:ss.filter(x=>CUE.test(x)).slice(0,3),ents:[]}}}
+  it.an=an;if(live()){D.loading=false;D.aiWait=aiOn();renderDetail()}
+  if(aiOn()){const ai=await redact(it,text,rel,live);if(ai){ai.ents=(an&&an.ents)||[];it.an=ai}if(live()){D.aiWait=false;renderDetail()}}
+  const sv=P.saved.find(s=>s.id===it.id);if(sv&&it.an){sv.an=it.an;sv.rel=it.rel;save()}}
+async function ask(){if(!D)return;const i=$('#askq'),q=i?i.value.trim():'';if(!q)return;const d=D,e={q,a:null};d.qa.push(e);renderDetail();const sb=$('#sbody');sb.scrollTop=sb.scrollHeight;
+  const r=await llm(`Responde en español, en menos de 120 palabras, usando solo el texto siguiente; si la respuesta no está en él, dilo y aporta el contexto general que conozcas señalándolo como tal.\n\nTitular: ${d.it.t}\nFuente: ${srcLabel(d.it)}\nTexto:\n${(d.it._text||d.it.full||d.it.d||'').slice(0,10000)}\n\nPregunta: ${q}`,false);
+  e.a=r?r.text:'El redactor no ha respondido ('+(AI.err||'sin respuesta')+').';if(D===d){renderDetail();sb.scrollTop=sb.scrollHeight}}
+function closeDetail(){if(!D)return;const sec=(now()-D.t0)/1000;learn(D.tab,D.it,Math.min(2,sec/15));bump(D.tab,'sec',Math.min(sec,300));D=null;$('#sheet').classList.remove('on');overlay()}
+$('#sfoot').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||!D)return;const a=b.dataset.a;
+  if(a==='save'){toggleSave(D.it,D.tab);b.classList.toggle('on',isSaved(D.it.id));const c=S[D.tab].cards.find(q=>q.it.id===D.it.id);if(c)c.el.querySelector('[data-a=save]').classList.toggle('on',isSaved(D.it.id))}
+  else if(a==='share'){try{Native.share(D.it.t,D.it.u)}catch(_){}learn(D.tab,D.it,1)}
+  else if(a==='open'){learn(D.tab,D.it,1.5);try{Native.openUrl(D.it.u)}catch(_){window.open(D.it.u)}}});
+$('#sbody').addEventListener('click',e=>{if(e.target.closest('#askgo')){ask();return}const rl=e.target.closest('[data-rel]');if(rl&&D&&D.it.rel){const u=D.it.rel[+rl.dataset.rel].u;try{Native.openUrl(u)}catch(_){window.open(u)}return}const b=e.target.closest('[data-e]');if(!b||!D)return;const e_=b.dataset.e;if(D.fol.includes(e_))return;D.fol.push(e_);const kw=P.tabs[D.tab].kw;toks(e_).forEach(w=>kw[w]=clamp((kw[w]||0)+3,-6,14));save();b.classList.add('on');toast('Verás más sobre '+e_)});
+let gy=0;$('#sheet .grab').addEventListener('touchstart',e=>gy=e.touches[0].clientY,{passive:true});$('#sheet .grab').addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-gy>30)closeDetail()},{passive:true});$('#sheet .grab').addEventListener('click',closeDetail);
+$('#scrim').addEventListener('click',()=>{if($('#sheet').classList.contains('on'))closeDetail();else closeDrawer()});
+function toggleSave(it,tab){const i=P.saved.findIndex(s=>s.id===it.id);if(i>=0){P.saved.splice(i,1);toast('Quitada de guardadas')}else{P.saved.unshift({id:it.id,t:it.t,u:it.u,d:(it.d||'').slice(0,500),img:it.img,src:it.src,ts:it.ts,tab,at:now(),an:it.an||null,rel:it.rel,k:it.k,soc:it.soc,au:it.au,full:it.full});learn(tab,it,3);bump(tab,'s',1);toast('Guardada en tu perfil')}save(true)}
+
+/* ───────── drawer ───────── */
+let dv='saved',confTab='gen',openSec='';
+function openDrawer(v,sec){if(v)dv=v;if(sec)openSec=sec;$('#dav').textContent=P.name[0].toUpperCase();$('#dname').textContent=P.name;$('#dsub').textContent=`${P.saved.length} guardadas · desde ${new Date(P.created).toLocaleDateString('es',{month:'short',year:'numeric'})}`;
+  $$('#dseg button').forEach(b=>b.classList.toggle('on',b.dataset.v===dv));renderDrawer();$('#drawer').classList.add('on');overlay()}
+function closeDrawer(){$('#drawer').classList.remove('on');overlay();openSec=''}
+$('#dseg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;dv=b.dataset.v;$$('#dseg button').forEach(x=>x.classList.toggle('on',x===b));renderDrawer()});
+function fmtT(s){s=Math.round(s);if(s<60)return s+' s';const m=Math.round(s/60);if(m<60)return m+' min';return Math.floor(m/60)+' h '+(m%60)+' min'}
+function renderDrawer(){const b=$('#dbody');
+  if(dv==='saved'){b.innerHTML=P.saved.length?P.saved.map(s=>`<div class="sv" data-id="${s.id}">${s.img?`<img referrerpolicy="no-referrer" src="${esc(s.img)}" onerror="this.outerHTML='<div class=ph></div>'">`:'<div class="ph"></div>'}<div style="flex:1;min-width:0"><b>${esc(s.t)}</b><small>${esc(srcLabel(s))} · ${TAB[s.tab]?TAB[s.tab].name:''} · guardada ${ago(s.at)}</small></div><button class="x" data-x="1">✕</button></div>`).join(''):'<p class="note" style="margin-top:20px">Aún no has guardado nada. Usa el marcador de cada noticia y aparecerá aquí.</p>';return}
+  if(dv==='stats'){const tot={v:0,o:0,s:0,sec:0};TABS.forEach(t=>{const s=P.tabs[t.id].st;tot.v+=s.v;tot.o+=s.o;tot.s+=s.s;tot.sec+=s.sec});
+    const days=[];for(let i=6;i>=0;i--){const d=new Date(now()-i*864e5);const k=d.toISOString().slice(0,10);days.push({l:d.toLocaleDateString('es',{weekday:'narrow'}),v:(P.days[k]||{}).v||0})}const mx=Math.max(1,...days.map(d=>d.v));
+    const mt=Math.max(1,...TABS.map(t=>P.tabs[t.id].st.sec));
+    let h=`<div class="kpis"><div class="kpi"><b>${tot.v}</b><small>noticias vistas</small></div><div class="kpi"><b>${tot.o}</b><small>abiertas (${tot.v?Math.round(tot.o/tot.v*100):0}%)</small></div><div class="kpi"><b>${fmtT(tot.sec)}</b><small>tiempo de lectura</small></div><div class="kpi"><b>${P.saved.length}</b><small>guardadas</small></div></div>
+    <div class="sec">Últimos 7 días</div><div class="bars">${days.map(d=>`<div><span>${d.v||''}</span><i style="height:${Math.round(d.v/mx*62)}px"></i>${d.l}</div>`).join('')}</div>
+    <div class="sec">Tiempo por pestaña</div>${TABS.map(t=>{const s=P.tabs[t.id].st;return `<div class="trow"><span>${t.name}</span><i style="width:${Math.max(2,Math.round(s.sec/mt*110))}px;background:${t.color}"></i><em>${fmtT(s.sec)} · ${s.v} vistas</em></div>`}).join('')}
+    <div class="sec">Lo que ha aprendido de ti</div><div class="mini" id="stt">${TABS.map(t=>`<button data-t="${t.id}" class="${t.id===confTab?'on':''}">${t.name}</button>`).join('')}</div>`;
+    const T_=P.tabs[confTab],ks=topKw(confTab,14),ss=Object.keys(T_.src).filter(k=>T_.src[k]>.3).sort((x,y)=>T_.src[y]-T_.src[x]).slice(0,5),neg=Object.keys(T_.kw).filter(k=>T_.kw[k]<-1).sort((x,y)=>T_.kw[x]-T_.kw[y]).slice(0,6);
+    h+=ks.length?`<p class="note">Temas que priorizo</p><div class="chips">${ks.map(k=>`<button>${esc(k)}</button>`).join('')}</div>`:'<p class="note">Todavía hay poco historial en esta pestaña. Sigue leyendo y se irá afinando.</p>';
+    if(ss.length)h+=`<p class="note" style="margin-top:14px">Fuentes preferidas</p><div class="chips">${ss.map(k=>`<button>${esc(k)}</button>`).join('')}</div>`;
+    if(neg.length)h+=`<p class="note" style="margin-top:14px">Lo que te enseño menos</p><div class="chips">${neg.map(k=>`<button style="opacity:.55">${esc(k)}</button>`).join('')}</div>`;
+    b.innerHTML=h;return}
+  // conf
+  const fs=feedsFor(confTab);const xv=Object.values(xState),xs={t:xv.length,ok:xv.filter(v=>v.ok).length,via:[...new Set(xv.map(v=>v.via).filter(Boolean))].join(', ')};
+  b.innerHTML=`<details data-s="tick" ${openSec==='tick'?'open':''}><summary>Acciones del banner</summary><div class="in">
+    ${P.tickers.map((t,i)=>`<div class="row"><div class="g"><b>${esc(t.s)}</b><small>${esc(t.n||'')}</small></div><button class="x" data-rm="${i}" style="color:var(--mute);font-size:18px">✕</button></div>`).join('')||'<p class="note">Sin acciones todavía.</p>'}
+    <input class="field" id="tq" placeholder="Buscar empresa o ticker (ej. LVMH, NVDA)" style="margin-top:10px" autocomplete="off"><div id="tres"></div></div></details>
+  <details data-s="src" ${openSec==='src'?'open':''}><summary>Fuentes</summary><div class="in"><div class="mini" id="cft">${TABS.map(t=>`<button data-t="${t.id}" class="${t.id===confTab?'on':''}">${t.name}</button>`).join('')}</div>
+    ${fs.map(f=>{const s=feedState[f.u];return `<div class="row"><i class="st ${s?(s.ok?'ok':'ko'):''}"></i><div class="g">${esc(f.n)}<small>${s?(s.ok?s.n+' noticias'+(s.via?' · vía '+s.via:''):'sin respuesta'+(s.code?' ('+s.code+')':'')):'sin comprobar'}</small></div>${f.c?`<button data-delf="${esc(f.u)}" style="color:var(--mute)">✕</button>`:''}<button class="sw ${P.off[f.u]?'':'on'}" data-f="${esc(f.u)}"></button></div>`}).join('')}
+    <input class="field" id="fu" placeholder="Añadir RSS: https://…" style="margin-top:10px" autocomplete="off"><button class="btn sm ghost" id="fadd">Añadir a ${TAB[confTab].name}</button></div></details>
+  <details data-s="soc" ${openSec==='soc'?'open':''}><summary>X y LinkedIn</summary><div class="in"><p class="note">Sin API oficial: se leen las cuentas públicas de X que elijas y se buscan posts de X y LinkedIn sobre tus temas. Funciona a ratos; aquí ves qué responde.</p>
+    <div class="row"><i class="st ${xs.t?(xs.ok?'ok':'ko'):''}"></i><div class="g">Cuentas de X<small>${xs.t?xs.ok+' de '+xs.t+' responden'+(xs.via?' · vía '+xs.via:''):'sin comprobar'}</small></div><button class="sw ${P.soc.x?'on':''}" data-soc="x"></button></div>
+    <div class="row"><i class="st ${socState.x?(socState.x.ok?'ok':'ko'):''}"></i><div class="g">Búsqueda de posts en X<small>${socState.x?(socState.x.ok?socState.x.n+' encontrados':'sin resultados ('+socState.x.code+')'):'sin comprobar'}</small></div></div>
+    <div class="row"><i class="st ${socState.in?(socState.in.ok?'ok':'ko'):''}"></i><div class="g">Posts y artículos de LinkedIn<small>${socState.in?(socState.in.ok?socState.in.n+' encontrados':'sin resultados ('+socState.in.code+')'):'sin comprobar'}</small></div><button class="sw ${P.soc.in?'on':''}" data-soc="in"></button></div>
+    <p class="note" style="margin:14px 0 8px">Cuentas de X por pestaña</p><div class="mini ctab">${TABS.map(t=>`<button data-t="${t.id}" class="${t.id===confTab?'on':''}">${t.name}</button>`).join('')}</div>
+    <div class="chips">${xAcc(confTab).map(h=>`<button data-xrm="${esc(h)}">@${esc(h)} ✕</button>`).join('')}</div>
+    <div class="ask" style="margin-top:10px"><input class="field" id="xh" placeholder="@cuenta" autocomplete="off"><button class="btn sm ghost" id="xadd">Añadir</button></div></div></details>
+  <details data-s="ai" ${openSec==='ai'?'open':''}><summary>Redactor IA (clave gratuita)</summary><div class="in"><p class="note">Pega una clave gratuita y el redactor reescribe cada noticia en español y analiza sus implicaciones (qué significa, de dónde viene, causas y posibles desenlaces) y responde a tus preguntas. Valen: Google AI Studio (aistudio.google.com), Groq (console.groq.com) u OpenRouter. Ninguna pide tarjeta.</p>
+    <input class="field" id="aik" placeholder="Clave (AIza…, gsk_… o sk-or-…)" value="${esc(P.ai.key)}" style="margin-top:10px" autocomplete="off"><input class="field" id="aim" placeholder="Modelo (vacío = automático)" value="${esc(P.ai.model)}" autocomplete="off">
+    <div class="row" style="border:0"><div class="g" style="white-space:normal">IA sin clave<small style="white-space:normal">Servicio gratuito Pollinations: más lento y limitado. Se usa si no hay clave o si falla.</small></div><button class="sw ${P.ai.free?'on':''}" data-free="1"></button></div><div class="chips"><button id="aisave">Guardar y probar</button></div><p class="note" id="aist" style="margin-top:10px">${P.ai.key?(AI.ok?'Activo · '+esc(AI.ok):'Clave guardada'):(P.ai.free?'Sin clave: se usa la IA sin clave.':'IA desactivada: solo frases extraídas de las fuentes.')}</p></div></details>
+  <details data-s="alg"><summary>Algoritmo</summary><div class="in"><p class="note">Cada pestaña aprende por separado de: tiempo en cada noticia, las que abres, guardas, compartes o descartas.</p><div class="chips" style="margin-top:10px">${TABS.map(t=>`<button data-reset="${t.id}">Reiniciar ${t.name}</button>`).join('')}</div></div></details>
+  <details data-s="bk"><summary>Copia de seguridad</summary><div class="in"><p class="note">Tu perfil vive en este teléfono. Exporta el archivo para llevártelo a otro móvil o recuperarlo si reinstalas.</p><div class="chips" style="margin-top:10px"><button id="bexp">Exportar perfil</button><button id="bimp">Importar perfil</button></div></div></details>
+  <button class="btn ghost" id="logout" style="margin-top:22px">Cerrar sesión</button>`}
+let tqT;
+$('#dbody').addEventListener('input',e=>{if(e.target.id!=='tq')return;clearTimeout(tqT);const q=e.target.value.trim();if(q.length<2){$('#tres').innerHTML='';return}
+  tqT=setTimeout(async()=>{const r=await nfetch('https://query2.finance.yahoo.com/v1/finance/search?q='+encodeURIComponent(q)+'&quotesCount=8&newsCount=0',{timeout:9000});let l=[];try{l=JSON.parse(r.text).quotes.filter(x=>x.symbol&&/EQUITY|ETF|INDEX|CRYPTOCURRENCY/.test(x.quoteType||''))}catch(_){}
+    const up=q.toUpperCase();if(!l.length&&/^[A-Z0-9.^=-]{1,12}$/.test(up))l=[{symbol:up,shortname:'Añadir tal cual'}];
+    const el=$('#tres');if(el)el.innerHTML=l.map(x=>`<div class="row" data-add="${esc(x.symbol)}" data-n="${esc(x.shortname||x.longname||'')}"><div class="g"><b>${esc(x.symbol)}</b><small>${esc(x.shortname||x.longname||'')} ${x.exchDisp?'· '+esc(x.exchDisp):''}</small></div><span style="color:var(--acc);font-weight:700">+</span></div>`).join('')||'<p class="note">Sin resultados.</p>'},350)});
+$('#dbody').addEventListener('toggle',e=>{if(e.target.open)openSec=e.target.dataset.s},true);
+$('#dbody').addEventListener('click',e=>{const t=e.target,q=s=>t.closest(s);let m;
+  if(dv==='saved'){const r=q('.sv');if(!r)return;const s=P.saved.find(x=>x.id===r.dataset.id);if(!s)return;if(q('[data-x]')){P.saved=P.saved.filter(x=>x!==s);save(true);openDrawer()}else{closeDrawer();openDetail(s,s.tab||'gen',null)}return}
+  if((m=q('#stt button,#cft button,.ctab button'))){confTab=m.dataset.t;renderDrawer();return}
+  if(q('[data-free]')){P.ai.free=!P.ai.free;save(true);openSec='ai';renderDrawer();return}
+  if((m=q('[data-soc]'))){const k=m.dataset.soc;P.soc[k]=!P.soc[k];save(true);m.classList.toggle('on');return}
+  if((m=q('[data-xrm]'))){P.x[confTab]=xAcc(confTab).filter(h=>h!==m.dataset.xrm);save(true);openSec='soc';renderDrawer();return}
+  if(q('#xadd')){const h=$('#xh').value.trim().replace(/^@/,'').replace(/^https?:\/\/(www\.)?(x|twitter)\.com\//,'').split(/[/?]/)[0];if(!/^[A-Za-z0-9_]{1,15}$/.test(h)){toast('Escribe el nombre de la cuenta, p. ej. @Reuters');return}if(!xAcc(confTab).includes(h)){P.x[confTab]=xAcc(confTab).concat(h);save(true)}openSec='soc';renderDrawer();toast('Comprobando @'+h+'…');pullX(confTab,h).then(()=>{const x=xState[h];toast(x&&x.ok?'@'+h+' responde ('+x.via+')':'@'+h+' no responde ahora');if(dv==='conf')renderDrawer()});return}
+  if((m=q('[data-add]'))){if(!P.tickers.some(x=>x.s===m.dataset.add)){P.tickers.push({s:m.dataset.add,n:m.dataset.n});save(true);qAt=0;loadQuotes(true)}openSec='tick';renderDrawer();banner();toast(m.dataset.add+' añadida');return}
+  if((m=q('[data-rm]'))){P.tickers.splice(+m.dataset.rm,1);save(true);openSec='tick';renderDrawer();banner();return}
+  if((m=q('[data-f]'))){const u=m.dataset.f;if(P.off[u])delete P.off[u];else P.off[u]=1;save(true);m.classList.toggle('on');return}
+  if((m=q('[data-delf]'))){P.custom[confTab]=(P.custom[confTab]||[]).filter(f=>f.u!==m.dataset.delf);save(true);openSec='src';renderDrawer();return}
+  if(q('#fadd')){const u=$('#fu').value.trim();if(!safeUrl(u)){toast('Pega una URL que empiece por https://');return}let n=u;try{n=new URL(u).hostname.replace(/^www\./,'')}catch(_){}(P.custom[confTab]=P.custom[confTab]||[]).push({n,u});save(true);openSec='src';renderDrawer();pull(confTab,{n,u}).then(k=>{toast(k?`${k} noticias de ${n}`:'Ese RSS no devolvió noticias');renderDrawer()});return}
+  if(q('#aisave')){P.ai.key=$('#aik').value.trim();P.ai.model=$('#aim').value.trim();AI={key:null,prov:'',cands:[],ok:''};save(true);const st=$('#aist');if(!aiOn()){st.textContent='IA desactivada.';return}st.textContent='Probando…';llm('Responde solo con la palabra OK.',false).then(r=>{const e=$('#aist');if(e)e.textContent=r?'Funciona · modelo '+r.model:'No funciona ('+(AI.err||'sin respuesta')+').'});return}
+  if((m=q('[data-reset]'))){const id=m.dataset.reset;const st=P.tabs[id].st;P.tabs[id]=blankTab();P.tabs[id].st=st;save(true);toast('Algoritmo de '+TAB[id].name+' reiniciado');return}
+  if(q('#bexp')){const data=JSON.stringify({pulso:1,profile:P});try{Native.saveFile('pulso-'+norm(P.name).replace(/[^a-z0-9]+/g,'-')+'-'+day()+'.json',data)}catch(_){toast('No disponible aquí')}return}
+  if(q('#bimp')){impTarget='merge';$('#file').click();return}
+  if(q('#logout')){save(true);LS.del('pulso.session');location.reload()}});
+
+/* ───────── session ───────── */
+let impTarget='new';
+const pinH=s=>hash('pulso:'+s+':'+s.length);
+function accounts(){return LS.get('pulso.accounts',[])}
+function loginUI(){const acc=accounts();$('#plist').innerHTML=acc.map(a=>`<button data-id="${a.id}"><span class="av">${esc(a.name[0].toUpperCase())}</span>${esc(a.name)}</button>`).join('');$('#lname').placeholder=acc.length?'Nuevo perfil: tu nombre':'Tu nombre'}
+function start(id){const acc=accounts().find(a=>a.id===id);if(!acc)return;PID=id;P=heal(LS.get('pulso.p.'+id,null)||blank(acc.name));decay();prune();LS.set('pulso.session',id);
+  $('#login').hidden=true;$('#app').hidden=false;$('#avatar').textContent=P.name[0].toUpperCase();buildFeeds();show('gen');save(true)}
+$('#plist').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=accounts().find(x=>x.id===b.dataset.id);if(a.pin){const p=prompt2();if(pinH(p)!==a.pin){$('#lerr').textContent='PIN incorrecto. Escríbelo abajo y toca tu perfil.';return}}start(a.id)});
+function prompt2(){return $('#lpin').value.trim()}
+$('#lgo').addEventListener('click',()=>{const n=$('#lname').value.trim(),p=$('#lpin').value.trim();if(!n){$('#lerr').textContent='Escribe un nombre para crear tu perfil.';return}const acc=accounts();if(acc.some(a=>norm(a.name)===norm(n))){$('#lerr').textContent='Ese perfil ya existe: tócalo arriba.';return}const id='u'+now().toString(36);acc.push({id,name:n,pin:p?pinH(p):''});LS.set('pulso.accounts',acc);LS.set('pulso.p.'+id,blank(n));start(id)});
+$('#limp').addEventListener('click',()=>{impTarget='new';$('#file').click()});
+$('#file').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);if(!j.pulso||!j.profile||!j.profile.tabs)throw 0;const p=heal(j.profile);
+  if(impTarget==='merge'&&PID){p.name=P.name;P=p;save(true);location.reload();return}
+  const acc=accounts();let a=acc.find(x=>norm(x.name)===norm(p.name));if(!a){a={id:'u'+now().toString(36),name:p.name,pin:''};acc.push(a);LS.set('pulso.accounts',acc)}LS.set('pulso.p.'+a.id,p);start(a.id)}catch(_){($('#lerr').textContent='Ese archivo no es una copia de Pulso.');toast('Archivo no válido')}};r.readAsText(f)});
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)show(b.dataset.t)});
+$('#avatar').addEventListener('click',()=>openDrawer('saved'));
+$('#refresh').addEventListener('click',()=>{const st=S[active];st.relax=false;refreshTab(active,true);discover(active);if(active==='fin'){qAt=0;loadQuotes(true)}if(active==='geo'){brkAt=0;loadBreak()}toast('Buscando lo último…')});
+document.addEventListener('visibilitychange',()=>{if(!P)return;if(document.hidden){pause(true);save(true)}else{overlay();if(!S[active].loading)refreshTab(active,false);banner()}});
+window.onBack=()=>{if(!P)return false;if($('#sheet').classList.contains('on')){closeDetail();return true}if($('#drawer').classList.contains('on')){closeDrawer();return true}return false};
+window.appToast=toast;
+(function init(){if(window.Native&&Native.web&&/iPhone|iPad|iPod/.test(navigator.userAgent)&&!navigator.standalone){const n=document.createElement('p');n.className='note';n.style.marginTop='18px';n.textContent='Para usarla como app: botón Compartir de Safari → «Añadir a pantalla de inicio».';$('#newp').appendChild(n)}loginUI();const s=LS.get('pulso.session',null);if(s&&accounts().some(a=>a.id===s))start(s)})();
+</script>
+</body>
+</html>
