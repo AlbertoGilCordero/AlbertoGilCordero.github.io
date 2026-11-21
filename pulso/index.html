@@ -67,6 +67,8 @@ input{font:inherit;color:inherit}
 .card.noimg .pic span{font-family:Fraunces,serif;font-weight:900;font-size:120px;line-height:.8;color:var(--acc);opacity:.9;letter-spacing:-6px}
 .meta{display:flex;align-items:center;gap:8px;font-size:12px;color:#ffffffa8;margin-bottom:9px;font-weight:500}
 .meta .src{background:var(--acc);color:#0a0a0c;font-weight:800;padding:3px 8px;border-radius:6px;font-size:11px;letter-spacing:.2px;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta .gl{color:var(--acc);font-weight:700;white-space:nowrap}
+textarea{font:inherit;color:inherit;resize:none}
 .card h2{font-family:Fraunces,serif;font-weight:700;font-size:25px;line-height:1.14;letter-spacing:-.4px;margin:0 0 10px;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
 .card .desc{font-size:14.5px;line-height:1.45;color:#ffffffc4;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .card .hint{margin-top:14px;font-size:11.5px;color:#ffffff70;letter-spacing:.3px}
@@ -85,6 +87,11 @@ input{font:inherit;color:inherit}
 .sce p{margin-top:5px!important}
 .ask{display:flex;gap:8px;align-items:stretch}.ask .field{margin:0;flex:1;min-width:0}.ask .btn{flex:none}
 .qa{background:var(--ink3);border-radius:12px;padding:11px 13px;margin-bottom:10px;font-size:14.5px;line-height:1.5}.qa b{display:block;color:var(--acc);font-size:12.5px;margin-bottom:5px}
+.live{align-self:flex-start;display:inline-flex;flex-wrap:wrap;gap:4px 9px;align-items:center;font-size:13px;background:#000000b0;border:1px solid #ffffff2e;border-radius:11px;padding:7px 11px;margin-bottom:10px;max-width:100%}
+.live span{font-size:10.5px;font-weight:800;letter-spacing:.7px;color:#ffffffa8}.live b{font-weight:700}.live em{font-style:normal;font-weight:700;color:#2fd58b}
+.live.on span{color:#ff5a4d}.live i{width:8px;height:8px;border-radius:50%;background:#ff3b30;animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.25}}
+#sbody .live{margin-bottom:12px}
 .rail{position:absolute;right:10px;bottom:calc(44px + var(--sab));z-index:3;display:flex;flex-direction:column;gap:16px}
 .rail button{width:44px;height:44px;border-radius:50%;background:#ffffff1c;backdrop-filter:blur(8px);display:grid;place-items:center}
 .rail button.on{background:var(--acc);color:#0a0a0c}
@@ -175,7 +182,9 @@ details .in{padding-bottom:14px}
     <input class="field" id="lpin" placeholder="PIN (opcional)" inputmode="numeric" maxlength="8" type="password" autocomplete="off">
     <div class="err" id="lerr"></div>
     <button class="btn" id="lgo">Entrar</button>
-    <button class="btn ghost" id="limp" style="margin-top:10px">Restaurar copia de seguridad</button>
+    <button class="btn ghost" id="limp" style="margin-top:10px">Restaurar copia de un archivo</button>
+    <button class="btn ghost" id="lcloud" style="margin-top:10px">Restaurar desde la nube</button>
+    <div id="lcbox" hidden style="margin-top:12px"><input class="field" id="lcu" placeholder="Usuario de la copia" autocomplete="off" autocapitalize="off"><input class="field" id="lcp" placeholder="Contraseña de la copia" type="password" autocomplete="off"><button class="btn" id="lcgo">Restaurar</button></div>
   </div>
 </div>
 
@@ -270,25 +279,64 @@ window.__nat=(id,status,b64,finalUrl)=>{const f=_p[id];if(!f)return;delete _p[id
 
 /* ───────── profile ───────── */
 let P=null,PID=null,saveT=null;
-function blankTab(){return {kw:{},src:{},seen:{},st:{v:0,o:0,s:0,sec:0,skip:0}}}
-function blank(name){const p={v:1,name,created:now(),last:now(),tabs:{},saved:[],days:{},tickers:[],off:{},custom:{},soc:{x:true,in:true},x:{},ai:{key:'',model:'',free:true}};TABS.forEach(t=>p.tabs[t.id]=blankTab());return p}
-function heal(p){const b=blank(p.name||'Yo');for(const k in b)if(p[k]==null)p[k]=b[k];TABS.forEach(t=>{p.tabs[t.id]=Object.assign(blankTab(),p.tabs[t.id]||{});p.tabs[t.id].st=Object.assign(blankTab().st,p.tabs[t.id].st||{})});if(p.ai.model==='gemini-flash-latest')p.ai.model='';if(p.ai.free==null)p.ai.free=true;return p}
+function blankTab(){return {kw:{},src:{},seen:{},m:newModel(),st:{v:0,o:0,s:0,sec:0,skip:0}}}
+function blank(name){const p={v:1,name,created:now(),last:now(),tabs:{},saved:[],days:{},tickers:[],off:{},custom:{},soc:{x:true,in:true},x:{},ai:{key:'',model:'',free:true},goal:{text:'',terms:[]}};TABS.forEach(t=>p.tabs[t.id]=blankTab());return p}
+function heal(p){const b=blank(p.name||'Yo');for(const k in b)if(p[k]==null)p[k]=b[k];TABS.forEach(t=>{p.tabs[t.id]=Object.assign(blankTab(),p.tabs[t.id]||{});p.tabs[t.id].st=Object.assign(blankTab().st,p.tabs[t.id].st||{});const m=p.tabs[t.id].m,nm=newModel();for(const k in nm)if(m[k]==null)m[k]=nm[k]});if(p.ai.model==='gemini-flash-latest')p.ai.model='';if(p.ai.free==null)p.ai.free=true;return p}
 function save(soon){clearTimeout(saveT);const go=()=>{if(P&&PID){P.last=now();if(!LS.set('pulso.p.'+PID,P)){prune(true);LS.set('pulso.p.'+PID,P)}}};if(soon)go();else saveT=setTimeout(go,900)}
 function prune(hard){TABS.forEach(t=>{const T_=P.tabs[t.id];const ks=Object.keys(T_.kw);const cap=hard?250:500;if(ks.length>cap*1.3){ks.sort((a,b)=>Math.abs(T_.kw[b])-Math.abs(T_.kw[a]));ks.slice(cap).forEach(k=>delete T_.kw[k])}const ss=Object.keys(T_.seen);const sc=hard?1200:3500;if(ss.length>sc*1.2){ss.sort((a,b)=>T_.seen[b]-T_.seen[a]);ss.slice(sc).forEach(k=>delete T_.seen[k])}});const ds=Object.keys(P.days).sort();while(ds.length>60)delete P.days[ds.shift()]}
-function decay(){const d=Math.floor((now()-(P.decayAt||P.created))/864e5);if(d<1)return;const f=Math.pow(.97,Math.min(d,60));TABS.forEach(t=>{const T_=P.tabs[t.id];for(const k in T_.kw){T_.kw[k]*=f;if(Math.abs(T_.kw[k])<.05)delete T_.kw[k]}for(const k in T_.src)T_.src[k]*=f});P.decayAt=now()}
+function decay(){const d=Math.floor((now()-(P.decayAt||P.created))/864e5);if(d<1)return;const f=Math.pow(.97,Math.min(d,60));TABS.forEach(t=>{const T_=P.tabs[t.id];for(const k in T_.kw){T_.kw[k]*=f;if(Math.abs(T_.kw[k])<.05)delete T_.kw[k]}const f2=Math.pow(.985,Math.min(d,90)),f3=Math.pow(.97,Math.min(d,90));for(const h of ['o','d','n'])for(const k in T_.m[h].z)T_.m[h].z[k]=Math.round(T_.m[h].z[k]*f2*1e4)/1e4;for(const k in T_.m.src){const b=T_.m.src[k];b[0]=1+(b[0]-1)*f3;b[1]=1+(b[1]-1)*f3}});P.decayAt=now()}
 function bump(tab,k,n){P.tabs[tab].st[k]+=n;const d=P.days[day()]||(P.days[day()]={v:0,o:0,sec:0});if(k in d)d[k]+=n;save()}
 
 /* ───────── learning ───────── */
-function feats(it){if(it._f)return it._f;const s=new Set(toks(it.t));toks((it.d||'').slice(0,160)).slice(0,10).forEach(w=>s.add(w));return it._f=[...s]}
-function learn(tab,it,w){if(!w)return;const T_=P.tabs[tab];for(const f of feats(it))T_.kw[f]=clamp((T_.kw[f]||0)+w*.5,-6,14);T_.src[it.src]=clamp((T_.src[it.src]||0)+w*.4,-6,10);save()}
-function affinity(tab,it){const kw=P.tabs[tab].kw,f=feats(it);if(!f.length)return 0;let s=0;for(const k of f)s+=kw[k]||0;return Math.tanh(s/Math.sqrt(f.length)/3)}
-function score(tab,it,prev){const c=TAB[tab],age=Math.max(0,(now()-it.ts)/36e5);
-  let s=1.2*Math.exp(-age/c.hl)+1.0*affinity(tab,it)+.45*Math.tanh((P.tabs[tab].src[it.src]||0)/3)+(it.img?.08:0)+(it.k?.35:0)+Math.random()*.14;
-  if(prev.includes(it.src))s-=.45;return s}
+/* ───────── recomendador ─────────
+   Modelo por pestaña, entrenado en el propio teléfono con cada gesto:
+   · vector de cada noticia por "feature hashing" (palabras y pares de palabras con TF-IDF, fuente, tipo, idioma)
+   · tres predictores en línea (FTRL-Proximal): abrir, leer con calma, descartar; nota = suma ponderada
+   · interés de la sesión (corto plazo), objetivo personal, exploración de fuentes (muestreo de Thompson)
+   · selección con diversidad: penaliza repetir fuente, parecerse a lo recién visto y las historias duplicadas */
+const DIM=1024,WH={o:1,d:.6,n:-1.4},FT={a:.6,b:1,l1:.002,l2:.3};
+function newModel(){return {o:{z:{},n:{}},d:{z:{},n:{}},n:{z:{},n:{}},src:{},imp:0}}
+function hadd(m,key,w){let h=2166136261;for(let i=0;i<key.length;i++){h^=key.charCodeAt(i);h=Math.imul(h,16777619)}h>>>=0;const i=h%DIM;m[i]=(m[i]||0)+((h>>>20)&1?w:-w)}
+function unit(m){let n=0;for(const k in m)n+=m[k]*m[k];n=Math.sqrt(n)||1;for(const k in m)m[k]/=n;return m}
+function dot(a,b){let x=0;if(!a||!b)return 0;for(const k in a){const y=b[k];if(y)x+=a[k]*y}return x}
+function randn(){let u=0;while(!u)u=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307*Math.random())}
+function langOf(t){const l=' '+norm(t)+' ',c=re=>(l.match(re)||[]).length,en=c(/ (the|and|of|to|in|for|is|on|with) /g),fr=c(/ (le|les|des|du|et|une|est|pour|dans) /g),es=c(/ (el|los|las|del|y|que|una|por|para) /g);return en>fr&&en>es?'en':fr>es?'fr':'es'}
+function idf(tab,w){const st=S[tab];return clamp(Math.log(1+(st.nd||1)/(1+(st.df.get(w)||0))),.4,4)}
+function feats(it){if(it._f)return it._f;return it._f=[...new Set(toks(it.t))]}
+function vec(tab,it){if(it._v)return it._v;const c={},tt=toks(it.t),dd=toks((it.d||'').slice(0,220)).slice(0,14);
+  for(const w of new Set(tt))hadd(c,w,idf(tab,w));for(const w of new Set(dd))hadd(c,w,.5*idf(tab,w));for(let i=0;i<tt.length-1;i++)hadd(c,tt[i]+'_'+tt[i+1],1.2);
+  it._c=unit(c);const v=Object.assign({},c);hadd(v,'S:'+it.src,.35);hadd(v,'K:'+(it.soc||it.k||'art'),.25);hadd(v,'L:'+langOf(it.t),.2);hadd(v,'#bias',.3);return it._v=v}
+function wOf(h,k){const z=h.z[k];if(!z||Math.abs(z)<=FT.l1)return 0;return -(z-Math.sign(z)*FT.l1)/((FT.b+Math.sqrt(h.n[k]||0))/FT.a+FT.l2)}
+function pred(h,x){let t=0;for(const k in x){const w=wOf(h,k);if(w)t+=w*x[k]}return 1/(1+Math.exp(-t))}
+function train(h,x,y,wt){const p=pred(h,x),r4=v=>Math.round(v*1e4)/1e4;for(const k in x){const g=(p-y)*x[k]*(wt||1),n=h.n[k]||0,w=wOf(h,k);h.z[k]=r4((h.z[k]||0)+g-(Math.sqrt(n+g*g)-Math.sqrt(n))/FT.a*w);h.n[k]=r4(n+g*g)}}
+function sessAdd(tab,c,r){const st=S[tab],m=st.sess;for(const k in m){m[k]*=.9;if(Math.abs(m[k])<.01)delete m[k]}for(const k in c)m[k]=(m[k]||0)+r*c[k];let n=0;for(const k in m)n+=m[k]*m[k];st.sn=Math.sqrt(n)}
+function kwAdd(tab,it,w){const kw=P.tabs[tab].kw;for(const f of feats(it))kw[f]=clamp((kw[f]||0)+w,-6,14)}
+let GV=null;
+function goalV(){if(GV)return GV;const g={},G=P.goal||{},parts=[G.text||''].concat(G.terms||[]);for(const part of parts){const tt=toks(part);for(const w of new Set(tt))hadd(g,w,1);for(let i=0;i<tt.length-1;i++)hadd(g,tt[i]+'_'+tt[i+1],1.2)}return GV=Object.keys(g).length?unit(g):{}}
+function expRead(it){return clamp(1.3+(it.t+' '+(it.d||'').slice(0,160)).split(/\s+/).length*.1,2.2,7)}
+// Señales: view (tiempo en la tarjeta), open, read (segundos en el detalle), save, share, link, hide
+function fb(tab,it,ev,val){const T_=P.tabs[tab],M=T_.m,x=vec(tab,it),b=M.src[it.src]||(M.src[it.src]=[1,1]),tr=(h,y,w)=>train(M[h],x,y,w);
+  if(ev==='view'){const r=val/expRead(it);M.imp++;
+    if(r<.35){tr('n',1,1);tr('o',0,.6);tr('d',0,.6);b[1]+=1;sessAdd(tab,it._c,-.4);kwAdd(tab,it,-.12);T_.st.skip++}
+    else if(r<.9){tr('o',0,.4);b[1]+=.4}
+    else if(r<1.6){tr('n',0,.5);b[0]+=.2;b[1]+=.2}
+    else{tr('d',1,1);tr('n',0,1);b[0]+=.6;sessAdd(tab,it._c,.5);kwAdd(tab,it,.2)}}
+  else if(ev==='open'){tr('o',1,1);tr('n',0,1);b[0]+=1;sessAdd(tab,it._c,1);kwAdd(tab,it,.6);M.imp++}
+  else if(ev==='read'){if(val>20){tr('d',1,1.5);kwAdd(tab,it,.3)}else if(val<4)tr('d',0,1)}
+  else if(ev==='save'){tr('o',1,2);tr('d',1,2);b[0]+=1;sessAdd(tab,it._c,1);kwAdd(tab,it,1)}
+  else if(ev==='share'||ev==='link'){tr('o',1,1);tr('d',1,1);b[0]+=.5;kwAdd(tab,it,.5)}
+  else if(ev==='hide'){tr('n',1,3);tr('o',0,2);tr('d',0,2);b[1]+=2;sessAdd(tab,it._c,-1);kwAdd(tab,it,-1.5)}
+  save()}
+function follow(tab,text){const c={},tt=toks(text);if(!tt.length)return;for(const w of tt)hadd(c,w,1);for(let i=0;i<tt.length-1;i++)hadd(c,tt[i]+'_'+tt[i+1],1.2);unit(c);const M=P.tabs[tab].m;train(M.o,c,1,3);train(M.d,c,1,3);sessAdd(tab,c,1.5);const kw=P.tabs[tab].kw;tt.forEach(w=>kw[w]=clamp((kw[w]||0)+3,-6,14));save()}
+function base(tab,it){const c=TAB[tab],st=S[tab],M=P.tabs[tab].m,x=vec(tab,it),age=Math.max(0,(now()-it.ts)/36e5);
+  const ml=WH.o*pred(M.o,x)+WH.d*pred(M.d,x)+WH.n*pred(M.n,x),sn=st.sn?dot(it._c,st.sess)/st.sn:0,g=dot(it._c,goalV());
+  const b=M.src[it.src]||[1,1],t=b[0]+b[1],th=clamp(b[0]/t+Math.sqrt(b[0]*b[1]/(t*t*(t+1)))*randn(),0,1);
+  const warm=Math.min(1,.25+M.imp/24);it._sn=sn;it._pn=pred(M.n,x);
+  return 1.6*warm*ml+.9*Math.exp(-age/c.hl)+.5*warm*clamp(sn,-1,1)+.9*Math.min(1,Math.max(0,g)*3)+.35*(th-.5)+(it.img?.05:0)+(it.k?.3:0)+(st.fresh>0?1.6*Math.exp(-age/4):0)}
 function topKw(tab,n){const kw=P.tabs[tab].kw;return Object.keys(kw).filter(k=>kw[k]>.8).sort((a,b)=>kw[b]-kw[a]).slice(0,n)}
 
 /* ───────── feeds ───────── */
-const S={};TABS.forEach(t=>S[t.id]={pool:new Map(),shown:new Set(),cards:[],cur:-1,t0:0,loading:0,lastDisc:0,qi:0,relax:false,el:null,loader:null,boot:false});
+const S={};TABS.forEach(t=>S[t.id]={sess:{},sn:0,df:new Map(),nd:0,pool:new Map(),shown:new Set(),cards:[],cur:-1,t0:0,loading:0,lastDisc:0,qi:0,relax:false,el:null,loader:null,boot:false});
 const feedState={};
 function feedsFor(tab){const base=FEEDS[tab].map(f=>({n:f[0],u:f[1],s:f[2],m:f[3]})).concat((SPECIAL[tab]||[]).map(f=>Object.assign({},f)));const cus=(P.custom[tab]||[]).map(f=>({n:f.n,u:f.u,c:1}));return base.concat(cus)}
 function qn(el,names){for(const n of names){const e=el.getElementsByTagName(n)[0];if(e)return e}return null}
@@ -316,7 +364,7 @@ function parseFeed(xml,srcName,tab,bing,lim){
     out.push({id:hash(norm(title).slice(0,90)),t:title,u:link,d:desc,img,src,ts,tab});
   }
   return out}
-function addItems(tab,items){const st=S[tab],c=TAB[tab];let n=0;for(const it of items){if((now()-it.ts)/36e5>(it.soc?Math.min(c.max,120):c.max))continue;if(st.pool.has(it.id)){const o=st.pool.get(it.id);if(!o.img&&it.img)o.img=it.img;continue}st.pool.set(it.id,it);n++}return n}
+function addItems(tab,items){const st=S[tab],c=TAB[tab];let n=0;for(const it of items){if((now()-it.ts)/36e5>(it.soc?Math.min(c.max,120):c.max))continue;if(st.pool.has(it.id)){const o=st.pool.get(it.id);if(!o.img&&it.img)o.img=it.img;continue}st.pool.set(it.id,it);n++;st.nd++;for(const w of new Set(toks(it.t)))st.df.set(w,(st.df.get(w)||0)+1)}return n}
 async function pull(tab,f,bing){const r=await nfetch(f.u,{timeout:16000,headers:f.h||{}});let items=[],via='';if(r.ok){try{items=f.k?SPARSE[f.k](r.text,tab,f.n):parseFeed(r.text,f.n,tab,bing,f.m)}catch(e){}}
   if(!items.length&&!bing&&f.s){const dom=f.s.split('/')[0],own=i=>hostOf(i.u).endsWith(dom);
     let b=await nfetch('https://www.bing.com/news/search?q='+encodeURIComponent('site:'+f.s)+'&format=rss',{timeout:12000});
@@ -333,12 +381,13 @@ async function discover(tab){const st=S[tab];if(now()-st.lastDisc<25000)return;s
   if(ks.length>=2){const a=ks[Math.floor(Math.random()*Math.min(4,ks.length))];let b=ks[Math.floor(Math.random()*ks.length)];qs.push((a===b?a:a+' '+b)+(c.hint?' '+c.hint:''))}
   if(ks.length){qs.push(ks[st.qi%ks.length]+(c.hint?' '+c.hint:''))}
   qs.push(c.base[st.qi%c.base.length]);st.qi++;
+  const gt=(P.goal&&P.goal.terms)||[];if(gt.length)qs.push(gt[Math.floor(Math.random()*gt.length)]+(c.hint?' '+c.hint:''));
   const mk=MKTS[st.qi%MKTS.length];
   refreshTab(tab,false);socialSearch(tab);
-  await Promise.all([...new Set(qs)].map((q,i)=>pull(tab,{n:'Bing News',u:'https://www.bing.com/news/search?q='+encodeURIComponent(q)+'&format=rss&setmkt='+(i===2?MKTS[(st.qi+1)%MKTS.length]:mk)},true)));
+  await Promise.all([...new Set(qs)].map((q,i)=>pull(tab,{n:'Bing News',u:'https://www.bing.com/news/search?q='+encodeURIComponent(q)+'&format=rss&setmkt='+(i>=2?MKTS[(st.qi+i)%MKTS.length]:mk)},true)));
   cache(tab);fill(tab)}
 function cache(tab){const a=[...S[tab].pool.values()].sort((x,y)=>y.ts-x.ts).slice(0,70).map(i=>({id:i.id,t:i.t,u:i.u,d:(i.d||'').slice(0,300),img:i.img,src:i.src,ts:i.ts,tab:i.tab,soc:i.soc,k:i.k,au:i.au,full:i.full?i.full.slice(0,900):undefined}));LS.set('pulso.c.'+tab,a)}
-function mark(){$('#refresh').classList.toggle('spin',!!S[active].loading)}
+function mark(){$('#refresh').classList.toggle('spin',!!S[active].loading||refreshing)}
 
 /* ───────── GitHub, Hugging Face y hackatones ───────── */
 const d14=()=>new Date(now()-14*864e5).toISOString().slice(0,10);
@@ -411,15 +460,22 @@ async function socialSearch(tab){const c=TAB[tab],st=S[tab],ks=topKw(tab,6);
 let active='gen',paused=false;
 const IC={save:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>',share:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/></svg>',nope:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg>'};
 function candidates(tab){const st=S[tab],seen=P.tabs[tab].seen,o=[];for(const it of st.pool.values()){if(st.shown.has(it.id))continue;if(!st.relax&&seen[it.id])continue;o.push(it)}return o}
-function pickNext(tab){const st=S[tab],c=candidates(tab);if(!c.length)return null;
-  const prev=st.cards.slice(-2).map(x=>x.it.src);
-  if(Math.random()<.12&&c.length>8){const r=c.sort((a,b)=>b.ts-a.ts).slice(0,Math.ceil(c.length*.5));return r[Math.floor(Math.random()*r.length)]}
-  let best=null,bs=-1e9;for(const it of c){const s=score(tab,it,prev);if(s>bs){bs=s;best=it}}return best}
+function pickNext(tab){const st=S[tab],c=candidates(tab);if(!c.length)return null;const fr=st.fresh>0;if(fr)st.fresh--;
+  const shown=st.cards.map(x=>x.it),last8=shown.slice(-8),last40=shown.slice(-40),M=P.tabs[tab].m,cnt8={},cnt5={},tot={};
+  last8.forEach((r,i)=>{cnt8[r.src]=(cnt8[r.src]||0)+1;if(i>=last8.length-5)cnt5[r.src]=(cnt5[r.src]||0)+1});shown.forEach(r=>tot[r.src]=(tot[r.src]||0)+1);
+  const sc=c.map(it=>({it,s:base(tab,it)}));
+  // 1 de cada 6: hueco de descubrimiento. Ignora el modelo y busca algo reciente, distinto de lo que vienes viendo y de una fuente poco probada
+  if(!fr&&st.cards.length%6===5){const hl=TAB[tab].hl;sc.forEach(o=>{const it=o.it,b=M.src[it.src]||[1,1],age=Math.max(0,(now()-it.ts)/36e5);o.s=(it._pn>.7||it._sn<-.25)?-9:.9*Math.exp(-age/hl)+.9*(1-Math.max(0,it._sn))+1.2/Math.sqrt(b[0]+b[1])+.5*Math.min(1,Math.max(0,dot(it._c,goalV()))*3)+Math.random()*.3})}
+  sc.sort((a,b)=>b.s-a.s);let best=null,bs=-1e9;const last5=shown.slice(-5);
+  for(const o of sc.slice(0,18)){const it=o.it;let sim=0,dup=0;for(const r of last40){const d=dot(it._c,r._c);if(d>dup)dup=d}for(const r of last8){const d=dot(it._c,r._c);if(d>sim)sim=d}
+    let avg=0;for(const r of last5)avg+=Math.max(0,dot(it._c,r._c));avg=last5.length?avg/last5.length:0;let f=o.s-.6*(cnt8[it.src]||0)-sim-1.2*avg;if((cnt5[it.src]||0)>=2)f-=3;if(dup>.6)f-=4;if(shown.length>10&&(tot[it.src]||0)/shown.length>.2)f-=.5;
+    if(f>bs){bs=f;best=it}}
+  return best}
 function isSaved(id){return P.saved.some(s=>s.id===id)}
 function cardEl(it,tab){const a=document.createElement('article');a.className='card'+(it.img?'':' noimg')+(it.soc?' post':'');const ph=it.soc==='x'?'X':it.soc==='in'?'in':it.src.slice(0,2);a.dataset.id=it.id;
   a.innerHTML=`<div class="bg"${it.img?` style="background-image:url('${esc(encodeURI(decodeURI(it.img)).replace(/'/g,'%27'))}')"`:''}></div>
   <div class="inner"><div class="pic">${it.img?`<img loading="lazy" referrerpolicy="no-referrer" src="${esc(it.img)}" alt="">`:`<span>${esc(ph)}</span>`}</div>
-  <div class="meta"><span class="src">${esc(srcLabel(it))}</span><span>${ago(it.ts)}</span></div>
+  ${tab==='dep'?liveHtml(matchGame(it)):''}<div class="meta"><span class="src">${esc(srcLabel(it))}</span><span>${ago(it.ts)}</span>${S[tab]&&(vec(tab,it),dot(it._c,goalV())>.14)?'<span class="gl">◎ Para tu objetivo</span>':''}</div>
   <h2>${esc(it.t)}</h2>${it.d?`<p class="desc">${esc(it.d)}</p>`:''}<div class="hint">${it.soc?'Toca para ver el post completo':it.k?'Toca para ver qué hace y qué puedes construir':it.tab==='emp'?'Toca para ver el caso y sus lecciones':'Toca para ver resumen e implicaciones'}</div></div>
   <div class="rail"><button data-a="save" class="${isSaved(it.id)?'on':''}">${IC.save}</button><button data-a="share">${IC.share}</button><button data-a="nope">${IC.nope}</button></div>`;
   const im=a.querySelector('img');if(im)im.onerror=()=>{a.classList.add('noimg');a.querySelector('.bg').style.backgroundImage='';a.querySelector('.pic').innerHTML=`<span>${esc(ph)}</span>`;it.img=''};
@@ -435,22 +491,22 @@ function closeDwell(tab){const st=S[tab];if(st.cur<0||!st.t0)return;const c=st.c
   const T_=P.tabs[tab];if(!T_.seen[c.it.id]){T_.seen[c.it.id]=Math.floor(now()/864e5);bump(tab,'v',1)}
   bump(tab,'sec',Math.min(dt,90));
   if(c.acted)return;
-  if(dt<1.3){learn(tab,c.it,-.35);T_.st.skip++}else if(dt>=3)learn(tab,c.it,Math.min(1.5,dt/8))}
+  fb(tab,c.it,'view',dt)}
 function setCur(tab,i){const st=S[tab];if(i===st.cur)return;closeDwell(tab);st.cur=i;st.t0=(tab===active&&!paused)?now():0;fill(tab)}
 const io=new IntersectionObserver(es=>{for(const e of es){if(e.intersectionRatio<.6)continue;const f=e.target.parentElement;if(!f)continue;const tab=f.dataset.tab;if(tab!==active)continue;const i=S[tab].cards.findIndex(c=>c.el===e.target);if(i>=0)setCur(tab,i)}},{threshold:[.6]});
 function pause(v){if(v===paused)return;paused=v;const st=S[active];if(v)closeDwell(active);else if(st.cur>=0)st.t0=now()}
 function buildFeeds(){const m=$('#feeds');m.innerHTML='';$('#tabs').innerHTML=TABS.map(t=>`<button data-t="${t.id}">${t.name}</button>`).join('');
   TABS.forEach(t=>{const f=document.createElement('section');f.className='feed';f.dataset.tab=t.id;f.hidden=true;f.style.setProperty('--acc',t.color);
     const l=document.createElement('div');l.className='loader';l.innerHTML='<div class="dot"></div><span>Buscando noticias…</span>';f.appendChild(l);m.appendChild(f);
-    Object.assign(S[t.id],{pool:new Map(),shown:new Set(),cards:[],cur:-1,t0:0,loading:0,lastDisc:0,relax:false,el:f,loader:l,boot:false});
+    Object.assign(S[t.id],{sess:{},sn:0,df:new Map(),nd:0,fresh:0,pool:new Map(),shown:new Set(),cards:[],cur:-1,t0:0,loading:0,lastDisc:0,relax:false,el:f,loader:l,boot:false});
     addItems(t.id,LS.get('pulso.c.'+t.id,[]));
     let x0=0,y0=0;f.addEventListener('touchstart',e=>{x0=e.touches[0].clientX;y0=e.touches[0].clientY},{passive:true});
     f.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;if(Math.abs(dx)>80&&Math.abs(dy)<45){const i=TABS.findIndex(q=>q.id===active)+(dx<0?1:-1);if(TABS[i])show(TABS[i].id)}},{passive:true});
     f.addEventListener('click',e=>{const card=e.target.closest('.card');if(!card)return;const c=S[t.id].cards.find(q=>q.el===card);if(!c)return;const b=e.target.closest('.rail button');
       if(!b){openDetail(c.it,t.id,c);return}
       const a=b.dataset.a;if(a==='save'){toggleSave(c.it,t.id);c.acted=true;b.classList.toggle('on',isSaved(c.it.id))}
-      else if(a==='share'){try{Native.share(c.it.t,c.it.u)}catch(_){}learn(t.id,c.it,1);c.acted=true}
-      else if(a==='nope'){learn(t.id,c.it,-3);c.acted=true;toast('Entendido: menos como esta');const nx=S[t.id].cards[S[t.id].cur+1];if(nx)nx.el.scrollIntoView({behavior:'smooth'})}})})}
+      else if(a==='share'){try{Native.share(c.it.t,c.it.u)}catch(_){}fb(t.id,c.it,'share');c.acted=true}
+      else if(a==='nope'){fb(t.id,c.it,'hide');c.acted=true;toast('Entendido: menos como esta');const nx=S[t.id].cards[S[t.id].cur+1];if(nx)nx.el.scrollIntoView({behavior:'smooth'})}})})}
 function show(tab){if(S[active])closeDwell(active);active=tab;const c=TAB[tab];document.documentElement.style.setProperty('--acc',c.color);
   $$('#tabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===tab);if(b.dataset.t===tab)b.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})});
   $$('.feed').forEach(f=>f.hidden=f.dataset.tab!==tab);
@@ -471,6 +527,26 @@ async function loadQuotes(force){if(!P.tickers.length)return;if(!force&&now()-qA
   if(active==='fin')banner()}
 async function loadBreak(){if(now()-brkAt<4*6e4)return;brkAt=now();const all=[];await Promise.all(BREAK.map(async f=>{const r=await nfetch(f[1],{timeout:14000});if(r.ok)parseFeed(r.text,f[0],'geo').forEach(i=>all.push(i))}));
   if(all.length){const seen=new Set();brk=all.sort((a,b)=>b.ts-a.ts).filter(i=>!seen.has(i.id)&&seen.add(i.id)).slice(0,14)}if(active==='geo')banner()}
+const LEAGUES=['soccer/esp.1','soccer/eng.1','soccer/fra.1','soccer/ita.1','soccer/ger.1','soccer/uefa.champions','soccer/uefa.europa','soccer/uefa.europa.conf','soccer/esp.copa_del_rey','soccer/esp.2','soccer/uefa.nations','soccer/fifa.worldq.uefa','basketball/nba','football/nfl'];
+const ALIAS={'barcelona':['barca'],'atletico madrid':['atletico','atleti'],'paris saint-germain':['psg','paris sg'],'manchester united':['man utd','man united'],'manchester city':['man city'],'tottenham hotspur':['tottenham','spurs'],'bayern munich':['bayern'],'borussia dortmund':['dortmund'],'internazionale':['inter de milan','inter milan'],'ac milan':['milan'],'athletic club':['athletic de bilbao','athletic bilbao'],'real sociedad':['la real'],'real betis':['betis'],'marseille':['olympique de marsella','om '],'wolverhampton wanderers':['wolves'],'newcastle united':['newcastle']};
+const GENERIC=new Set(['real','club','city','united','sporting','athletic','racing','deportivo','union','olympique','football']);
+let games=[],gamesAt=0;
+async function loadScores(force){if(!force&&now()-gamesAt<40000)return;gamesAt=now();const out=[];
+  await Promise.all(LEAGUES.map(async l=>{const r=await nfetch('https://site.api.espn.com/apis/site/v2/sports/'+l+'/scoreboard',{timeout:10000});if(!r.ok)return;
+    try{for(const e of JSON.parse(r.text).events||[]){const c=(e.competitions||[])[0];if(!c)continue;const stt=e.status||c.status||{},ty=stt.type||{},cs=c.competitors||[];
+      const H=cs.find(x=>x.homeAway==='home')||cs[0],A=cs.find(x=>x.homeAway==='away')||cs[1];if(!H||!A||!H.team||!A.team)continue;
+      const nm=t=>{const a=[t.team.displayName,t.team.shortDisplayName,t.team.location,t.team.name].filter(Boolean).map(norm);(ALIAS[norm(t.team.displayName||'')]||[]).forEach(x=>a.push(x));return [...new Set(a)].filter(x=>x.length>3&&!GENERIC.has(x))};
+      out.push({id:e.id,h:H.team.shortDisplayName||H.team.displayName,a:A.team.shortDisplayName||A.team.displayName,hs:H.score,as:A.score,state:ty.state,det:(ty.shortDetail||ty.detail||stt.displayClock||'').trim(),hn:nm(H),an:nm(A),date:Date.parse(e.date)||0})}}catch(_){}}));
+  if(out.length)games=out;applyScores();if(active==='dep')banner()}
+const gShow=g=>g.state==='in'||(g.state==='post'&&now()-g.date<20*36e5)||(g.state==='pre'&&g.date-now()<14*36e5&&g.date-now()>-3*36e5);
+function matchGame(it){if(!games.length)return null;const tx=' '+norm(it.t+' '+(it.d||'')+' '+(it.full||''))+' ',cue=/ (directo|en vivo|live|minuto|en juego|en direct) /.test(tx);let best=null,bv=0;
+  for(const g of games){if(!gShow(g))continue;const h=g.hn.some(n=>tx.includes(n)),a=g.an.some(n=>tx.includes(n));let v=0;if(h&&a)v=3;else if((h||a)&&g.state==='in'&&cue)v=1;if(!v)continue;v+=g.state==='in'?2:g.state==='post'?1:0;if(v>bv){bv=v;best=g}}return best}
+function liveHtml(g){if(!g)return '';const hh=new Date(g.date).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'});
+  if(g.state==='in')return `<div class="live on"><i></i><span>EN DIRECTO</span><b>${esc(g.h)} ${esc(g.hs)}–${esc(g.as)} ${esc(g.a)}</b><em>${esc(g.det)}</em></div>`;
+  if(g.state==='post')return `<div class="live"><span>FINAL</span><b>${esc(g.h)} ${esc(g.hs)}–${esc(g.as)} ${esc(g.a)}</b></div>`;
+  return `<div class="live"><span>HOY ${hh}</span><b>${esc(g.h)} – ${esc(g.a)}</b></div>`}
+function applyScores(){const st=S.dep;if(!st||!st.el)return;for(const c of st.cards){const html=liveHtml(matchGame(c.it)),old=c.el.querySelector('.live');if(old){if(html)old.outerHTML=html;else old.remove()}else if(html)c.el.querySelector('.meta').insertAdjacentHTML('beforebegin',html)}
+  if(D&&D.tab==='dep'){const o=$('#sbody .live'),html=liveHtml(matchGame(D.it));if(o&&html)o.outerHTML=html}}
 function banner(){const b=$('#banner');let h='',n=0;
   if(active==='fin'){
     if(!P.tickers.length)h='<span class="tag">MERCADO</span><span class="cta" data-a="tick">+ Elige las acciones de tu banner</span>';
@@ -484,9 +560,13 @@ function banner(){const b=$('#banner');let h='',n=0;
     if(!brk.length)h='<span class="tag">ÚLTIMA HORA</span><span class="cta">Cargando titulares…</span>';
     else{const one=brk.map((i,k)=>`<span data-b="${k}"><b>${esc(i.src)}</b>${esc(i.t)}<span class="dim">· ${ago(i.ts)}</span></span>`).join('');h=`<span class="tag">ÚLTIMA HORA</span><div class="run" style="animation-duration:${brk.length*9}s">${one}${one}</div>`}
     loadBreak()}
+  else if(active==='dep'){const ord={in:0,pre:1,post:2},gs=games.filter(gShow).sort((x,y)=>ord[x.state]-ord[y.state]||x.date-y.date).slice(0,18),live=gs.some(g=>g.state==='in');
+    if(gs.length){const one=gs.map(g=>g.state==='pre'?`<span><b>${esc(g.h)} – ${esc(g.a)}</b><span class="dim">${new Date(g.date).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})}</span></span>`:`<span><b>${esc(g.h)} ${esc(g.hs)}–${esc(g.as)} ${esc(g.a)}</b><span class="${g.state==='in'?'up':'dim'}">${g.state==='in'?esc(g.det):'final'}</span></span>`).join('');
+      h=`<span class="tag">${live?'EN DIRECTO':'HOY'}</span><div class="run" style="animation-duration:${Math.max(16,gs.length*6)}s">${one}${one}${gs.length<3?one+one:''}</div>`}
+    loadScores()}
   b.hidden=!h;b.innerHTML=h;document.documentElement.style.setProperty('--ban',h?'34px':'0px')}
 $('#banner').addEventListener('click',e=>{const a=e.target.closest('[data-a]'),k=e.target.closest('[data-b]');if(a){openDrawer('conf','tick')}else if(k){const it=brk[+k.dataset.b];if(it)openDetail(it,'geo',null)}});
-setInterval(()=>{if(!P||paused||document.hidden)return;if(active==='fin')loadQuotes();if(active==='geo')loadBreak()},30000);
+setInterval(()=>{if(!P||paused||document.hidden)return;if(active==='fin')loadQuotes();if(active==='geo')loadBreak();if(active==='dep')loadScores()},30000);
 
 /* ───────── summary ───────── */
 const CUE=/\b(implica\w*|supon\w+|significa\w*|consecuencia\w*|impacto|afecta\w*|podr[ií]a\w*|riesgo\w*|amenaza\w*|prev[eé]\w*|se espera|obliga\w*|permitir[aá]\w*|abre la puerta|por lo que|de cara a|could|would|expected|means|impact\w*|risk\w*|threat\w*|likely|implication\w*|consequence\w*|as a result|paves the way|warn\w*|raises|devrait|devraient|pourrait|pourraient|risque\w*|cons[eé]quence\w*|signifie|implique|menace\w*|permettra|entra[iî]ne|pr[eé]voit)\b/i;
@@ -590,22 +670,24 @@ Da 2 o 3 desenlaces distintos entre sí. El análisis es obligatorio: nunca deje
 Titular: ${it.soc?'':it.t}
 Fuentes:
 ${src||'(sin texto disponible, solo el titular)'}`;
-  const r=await llm(prompt,true,alive);if(!r)return null;try{const t=r.text,o=JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1));
+  const GP=(P.goal&&P.goal.text)?`\n\nADEMÁS: quien lee tiene este objetivo personal: "${P.goal.text.slice(0,500).replace(/"/g,"'")}". Añade al JSON la clave "para_ti": 1-2 frases concretas sobre qué debería aprender, vigilar o hacer a raíz de esto para acercarse a ese objetivo. Si no guarda relación real, deja "para_ti":"".`:'';
+  const r=await llm(prompt+GP,true,alive);if(!r)return null;try{const t=r.text,o=JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1));
     const out=(Array.isArray(o.desenlaces)?o.desenlaces:[]).map(d=>typeof d==='string'?{n:'',t:d,p:''}:{n:String(d.escenario||''),t:String(d.que_pasaria||d.descripcion||''),p:String(d.probabilidad||'').toLowerCase()}).filter(d=>d.t||d.n).slice(0,4);
-    const an={ai:r.model,lead:String(o.entradilla||''),body:arr(o.cuerpo),sum:arr(o.claves),mean:arr(o.significado),origin:arr(o.origen).join(' '),causes:arr(o.causas),out,imp:arr(o.implicaciones),ents:[]};
+    const an={ai:r.model,lead:String(o.entradilla||''),body:arr(o.cuerpo),sum:arr(o.claves),mean:arr(o.significado),origin:arr(o.origen).join(' '),causes:arr(o.causas),out,imp:arr(o.implicaciones),me:String(o.para_ti||'').trim(),ents:[]};
     if(an.body.length||an.sum.length||an.lead||an.mean.length)return an}catch(e){}return null}
 
 /* ───────── detail sheet ───────── */
 let D=null;
 function overlay(){const on=$('#sheet').classList.contains('on')||$('#drawer').classList.contains('on');$('#scrim').classList.toggle('on',on);pause(on)}
 function renderDetail(){if(!D)return;const it=D.it,a=it.an,body=$('#sbody'),soc=it.soc,sk='<div class="sk" style="width:96%"></div><div class="sk" style="width:88%"></div><div class="sk" style="width:70%"></div>';
-  let h=`${it.img?`<img class="hero" referrerpolicy="no-referrer" src="${esc(it.img)}" onerror="this.remove()">`:''}<div class="meta"><span class="src">${esc(srcLabel(it))}</span><span>${ago(it.ts)}</span></div>`;
+  let h=`${it.img?`<img class="hero" referrerpolicy="no-referrer" src="${esc(it.img)}" onerror="this.remove()">`:''}${D.tab==='dep'?liveHtml(matchGame(it)):''}<div class="meta"><span class="src">${esc(srcLabel(it))}</span><span>${ago(it.ts)}</span></div>`;
   h+=soc?`<p class="ptext">${esc(it.full||it.t)}</p>`:`<h3>${esc(it.t)}</h3>`;
   if(D.aiWait)h+='<div class="sec">Implicaciones · análisis de la IA</div><p class="note">Redactando con '+(it.rel&&it.rel.length?it.rel.length+' fuentes más':'las fuentes disponibles')+'…'+(P.ai.key?'':' Sin clave puede tardar unos 15 s.')+'</p>'+sk;
   if(a&&a.ai){
     if(a.sum.length)h+=`<div class="sec">Claves</div><ul class="sum">${a.sum.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`;
     const A=(a.mean&&a.mean.length)||a.origin||(a.causes&&a.causes.length)||(a.out&&a.out.length);
     const L=(it.tab==='emp'&&!it.soc&&!it.k)?['La jugada','Cómo llegó hasta aquí','Por qué funcionó o falló','Lecciones que te llevas','','Caso de negocio · análisis de la IA']:it.k==='proj'?['Qué puedes construir','De dónde sale','Por qué está despegando','Ideas para montar tú','dificultad','Para qué sirve · análisis de la IA']:['Qué podría significar','De dónde viene','Causas','Posibles desenlaces','prob.','Implicaciones · análisis de la IA'];
+    if(a.me)h+=`<div class="sec">Para tu objetivo</div><div class="blk" style="border-left-color:#f4f1ea"><p>${esc(a.me)}</p></div>`;
     if(A){h+='<div class="sec">'+L[5]+'</div>';
       if(a.mean&&a.mean.length)h+=`<div class="blk"><b>${L[0]}</b>${a.mean.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`;
       if(a.origin)h+=`<div class="blk"><b>${L[1]}</b><p>${esc(a.origin)}</p></div>`;
@@ -633,7 +715,7 @@ function renderDetail(){if(!D)return;const it=D.it,a=it.an,body=$('#sbody'),soc=
   if(aiOn()&&!D.loading&&!D.aiWait){h+='<div class="sec">Pregunta al redactor</div>'+D.qa.map(q=>`<div class="qa"><b>${esc(q.q)}</b>${q.a==null?'<div class="sk" style="width:80%;margin:4px 0 0"></div>':esc(q.a)}</div>`).join('')+'<div class="ask"><input class="field" id="askq" placeholder="¿Qué quieres saber?" autocomplete="off"><button class="btn sm" id="askgo">Enviar</button></div>'}
   body.innerHTML=h;
   $('#sfoot').innerHTML=`<button class="sq ${isSaved(it.id)?'on':''}" data-a="save">${IC.save}</button><button class="sq" data-a="share">${IC.share}</button><button class="btn" data-a="open">${soc==='x'?'Abrir en X':soc==='in'?'Abrir en LinkedIn':it.k?'Abrir el proyecto':'Leer en '+esc(it.src)}</button>`}
-async function openDetail(it,tab,c){D={it,tab,t0:now(),loading:!it.an,fol:[],qa:[]};if(c)c.acted=true;learn(tab,it,2);bump(tab,'o',1);
+async function openDetail(it,tab,c){D={it,tab,t0:now(),loading:!it.an,fol:[],qa:[]};if(c)c.acted=true;fb(tab,it,'open');bump(tab,'o',1);
   const T_=P.tabs[tab];if(!T_.seen[it.id]){T_.seen[it.id]=Math.floor(now()/864e5);bump(tab,'v',1)}
   renderDetail();$('#sbody').scrollTop=0;$('#sheet').classList.add('on');overlay();
   if(it.an&&(it.an.ai||!aiOn()))return;
@@ -653,15 +735,15 @@ async function openDetail(it,tab,c){D={it,tab,t0:now(),loading:!it.an,fol:[],qa:
 async function ask(){if(!D)return;const i=$('#askq'),q=i?i.value.trim():'';if(!q)return;const d=D,e={q,a:null};d.qa.push(e);renderDetail();const sb=$('#sbody');sb.scrollTop=sb.scrollHeight;
   const r=await llm(`Responde en español, en menos de 120 palabras, usando solo el texto siguiente; si la respuesta no está en él, dilo y aporta el contexto general que conozcas señalándolo como tal.\n\nTitular: ${d.it.t}\nFuente: ${srcLabel(d.it)}\nTexto:\n${(d.it._text||d.it.full||d.it.d||'').slice(0,10000)}\n\nPregunta: ${q}`,false);
   e.a=r?r.text:'El redactor no ha respondido ('+(AI.err||'sin respuesta')+').';if(D===d){renderDetail();sb.scrollTop=sb.scrollHeight}}
-function closeDetail(){if(!D)return;const sec=(now()-D.t0)/1000;learn(D.tab,D.it,Math.min(2,sec/15));bump(D.tab,'sec',Math.min(sec,300));D=null;$('#sheet').classList.remove('on');overlay()}
+function closeDetail(){if(!D)return;const sec=(now()-D.t0)/1000;fb(D.tab,D.it,'read',sec);bump(D.tab,'sec',Math.min(sec,300));D=null;$('#sheet').classList.remove('on');overlay()}
 $('#sfoot').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||!D)return;const a=b.dataset.a;
   if(a==='save'){toggleSave(D.it,D.tab);b.classList.toggle('on',isSaved(D.it.id));const c=S[D.tab].cards.find(q=>q.it.id===D.it.id);if(c)c.el.querySelector('[data-a=save]').classList.toggle('on',isSaved(D.it.id))}
-  else if(a==='share'){try{Native.share(D.it.t,D.it.u)}catch(_){}learn(D.tab,D.it,1)}
-  else if(a==='open'){learn(D.tab,D.it,1.5);try{Native.openUrl(D.it.u)}catch(_){window.open(D.it.u)}}});
-$('#sbody').addEventListener('click',e=>{if(e.target.closest('#askgo')){ask();return}const rl=e.target.closest('[data-rel]');if(rl&&D&&D.it.rel){const u=D.it.rel[+rl.dataset.rel].u;try{Native.openUrl(u)}catch(_){window.open(u)}return}const b=e.target.closest('[data-e]');if(!b||!D)return;const e_=b.dataset.e;if(D.fol.includes(e_))return;D.fol.push(e_);const kw=P.tabs[D.tab].kw;toks(e_).forEach(w=>kw[w]=clamp((kw[w]||0)+3,-6,14));save();b.classList.add('on');toast('Verás más sobre '+e_)});
+  else if(a==='share'){try{Native.share(D.it.t,D.it.u)}catch(_){}fb(D.tab,D.it,'share')}
+  else if(a==='open'){fb(D.tab,D.it,'link');try{Native.openUrl(D.it.u)}catch(_){window.open(D.it.u)}}});
+$('#sbody').addEventListener('click',e=>{if(e.target.closest('#askgo')){ask();return}const rl=e.target.closest('[data-rel]');if(rl&&D&&D.it.rel){const u=D.it.rel[+rl.dataset.rel].u;try{Native.openUrl(u)}catch(_){window.open(u)}return}const b=e.target.closest('[data-e]');if(!b||!D)return;const e_=b.dataset.e;if(D.fol.includes(e_))return;D.fol.push(e_);follow(D.tab,e_);b.classList.add('on');toast('Verás más sobre '+e_)});
 let gy=0;$('#sheet .grab').addEventListener('touchstart',e=>gy=e.touches[0].clientY,{passive:true});$('#sheet .grab').addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-gy>30)closeDetail()},{passive:true});$('#sheet .grab').addEventListener('click',closeDetail);
 $('#scrim').addEventListener('click',()=>{if($('#sheet').classList.contains('on'))closeDetail();else closeDrawer()});
-function toggleSave(it,tab){const i=P.saved.findIndex(s=>s.id===it.id);if(i>=0){P.saved.splice(i,1);toast('Quitada de guardadas')}else{P.saved.unshift({id:it.id,t:it.t,u:it.u,d:(it.d||'').slice(0,500),img:it.img,src:it.src,ts:it.ts,tab,at:now(),an:it.an||null,rel:it.rel,k:it.k,soc:it.soc,au:it.au,full:it.full});learn(tab,it,3);bump(tab,'s',1);toast('Guardada en tu perfil')}save(true)}
+function toggleSave(it,tab){const i=P.saved.findIndex(s=>s.id===it.id);if(i>=0){P.saved.splice(i,1);toast('Quitada de guardadas')}else{P.saved.unshift({id:it.id,t:it.t,u:it.u,d:(it.d||'').slice(0,500),img:it.img,src:it.src,ts:it.ts,tab,at:now(),an:it.an||null,rel:it.rel,k:it.k,soc:it.soc,au:it.au,full:it.full});fb(tab,it,'save');bump(tab,'s',1);toast('Guardada en tu perfil')}save(true)}
 
 /* ───────── drawer ───────── */
 let dv='saved',confTab='gen',openSec='';
@@ -679,14 +761,18 @@ function renderDrawer(){const b=$('#dbody');
     <div class="sec">Últimos 7 días</div><div class="bars">${days.map(d=>`<div><span>${d.v||''}</span><i style="height:${Math.round(d.v/mx*62)}px"></i>${d.l}</div>`).join('')}</div>
     <div class="sec">Tiempo por pestaña</div>${TABS.map(t=>{const s=P.tabs[t.id].st;return `<div class="trow"><span>${t.name}</span><i style="width:${Math.max(2,Math.round(s.sec/mt*110))}px;background:${t.color}"></i><em>${fmtT(s.sec)} · ${s.v} vistas</em></div>`}).join('')}
     <div class="sec">Lo que ha aprendido de ti</div><div class="mini" id="stt">${TABS.map(t=>`<button data-t="${t.id}" class="${t.id===confTab?'on':''}">${t.name}</button>`).join('')}</div>`;
-    const T_=P.tabs[confTab],ks=topKw(confTab,14),ss=Object.keys(T_.src).filter(k=>T_.src[k]>.3).sort((x,y)=>T_.src[y]-T_.src[x]).slice(0,5),neg=Object.keys(T_.kw).filter(k=>T_.kw[k]<-1).sort((x,y)=>T_.kw[x]-T_.kw[y]).slice(0,6);
+    const T_=P.tabs[confTab],ks=topKw(confTab,14),MS=T_.m.src,ss=Object.keys(MS).filter(k=>MS[k][0]>=2.5&&MS[k][0]/(MS[k][0]+MS[k][1])>.5).sort((x,y)=>MS[y][0]/(MS[y][0]+MS[y][1])-MS[x][0]/(MS[x][0]+MS[x][1])).slice(0,6),neg=Object.keys(T_.kw).filter(k=>T_.kw[k]<-1).sort((x,y)=>T_.kw[x]-T_.kw[y]).slice(0,6);
     h+=ks.length?`<p class="note">Temas que priorizo</p><div class="chips">${ks.map(k=>`<button>${esc(k)}</button>`).join('')}</div>`:'<p class="note">Todavía hay poco historial en esta pestaña. Sigue leyendo y se irá afinando.</p>';
     if(ss.length)h+=`<p class="note" style="margin-top:14px">Fuentes preferidas</p><div class="chips">${ss.map(k=>`<button>${esc(k)}</button>`).join('')}</div>`;
     if(neg.length)h+=`<p class="note" style="margin-top:14px">Lo que te enseño menos</p><div class="chips">${neg.map(k=>`<button style="opacity:.55">${esc(k)}</button>`).join('')}</div>`;
     b.innerHTML=h;return}
   // conf
-  const fs=feedsFor(confTab);const xv=Object.values(xState),xs={t:xv.length,ok:xv.filter(v=>v.ok).length,via:[...new Set(xv.map(v=>v.via).filter(Boolean))].join(', ')};
-  b.innerHTML=`<details data-s="tick" ${openSec==='tick'?'open':''}><summary>Acciones del banner</summary><div class="in">
+  const cc=cloudCred();const fs=feedsFor(confTab);const xv=Object.values(xState),xs={t:xv.length,ok:xv.filter(v=>v.ok).length,via:[...new Set(xv.map(v=>v.via).filter(Boolean))].join(', ')};
+  const G=P.goal||{text:'',terms:[]};
+  b.innerHTML=`<details data-s="goal" ${openSec==='goal'?'open':''}><summary>Quién quiero ser</summary><div class="in"><p class="note">Escribe a dónde quieres llegar y qué quieres dominar. El algoritmo lo usará en todas las pestañas: priorizará lo que te acerca a ello, buscará noticias sobre esos temas y la IA te dirá qué aprender de cada una.</p>
+    <textarea class="field" id="goalt" rows="5" style="margin-top:10px" placeholder="Ej.: Quiero dirigir una empresa de energía. Necesito dominar finanzas corporativas, estrategia, negociación y entender la geopolítica de la energía.">${esc(G.text)}</textarea>
+    <div class="chips"><button id="goals">Guardar objetivo</button></div><p class="note" id="goalst" style="margin-top:10px">${G.terms&&G.terms.length?'Temas que sigo por ti: '+esc(G.terms.slice(0,24).join(' · ')):(G.text?'Objetivo guardado.':'')}</p></div></details>
+  <details data-s="tick" ${openSec==='tick'?'open':''}><summary>Acciones del banner</summary><div class="in">
     ${P.tickers.map((t,i)=>`<div class="row"><div class="g"><b>${esc(t.s)}</b><small>${esc(t.n||'')}</small></div><button class="x" data-rm="${i}" style="color:var(--mute);font-size:18px">✕</button></div>`).join('')||'<p class="note">Sin acciones todavía.</p>'}
     <input class="field" id="tq" placeholder="Buscar empresa o ticker (ej. LVMH, NVDA)" style="margin-top:10px" autocomplete="off"><div id="tres"></div></div></details>
   <details data-s="src" ${openSec==='src'?'open':''}><summary>Fuentes</summary><div class="in"><div class="mini" id="cft">${TABS.map(t=>`<button data-t="${t.id}" class="${t.id===confTab?'on':''}">${t.name}</button>`).join('')}</div>
@@ -702,8 +788,15 @@ function renderDrawer(){const b=$('#dbody');
   <details data-s="ai" ${openSec==='ai'?'open':''}><summary>Redactor IA (clave gratuita)</summary><div class="in"><p class="note">Pega una clave gratuita y el redactor reescribe cada noticia en español y analiza sus implicaciones (qué significa, de dónde viene, causas y posibles desenlaces) y responde a tus preguntas. Valen: Google AI Studio (aistudio.google.com), Groq (console.groq.com) u OpenRouter. Ninguna pide tarjeta.</p>
     <input class="field" id="aik" placeholder="Clave (AIza…, gsk_… o sk-or-…)" value="${esc(P.ai.key)}" style="margin-top:10px" autocomplete="off"><input class="field" id="aim" placeholder="Modelo (vacío = automático)" value="${esc(P.ai.model)}" autocomplete="off">
     <div class="row" style="border:0"><div class="g" style="white-space:normal">IA sin clave<small style="white-space:normal">Servicio gratuito Pollinations: más lento y limitado. Se usa si no hay clave o si falla.</small></div><button class="sw ${P.ai.free?'on':''}" data-free="1"></button></div><div class="chips"><button id="aisave">Guardar y probar</button></div><p class="note" id="aist" style="margin-top:10px">${P.ai.key?(AI.ok?'Activo · '+esc(AI.ok):'Clave guardada'):(P.ai.free?'Sin clave: se usa la IA sin clave.':'IA desactivada: solo frases extraídas de las fuentes.')}</p></div></details>
-  <details data-s="alg"><summary>Algoritmo</summary><div class="in"><p class="note">Cada pestaña aprende por separado de: tiempo en cada noticia, las que abres, guardas, compartes o descartas.</p><div class="chips" style="margin-top:10px">${TABS.map(t=>`<button data-reset="${t.id}">Reiniciar ${t.name}</button>`).join('')}</div></div></details>
-  <details data-s="bk"><summary>Copia de seguridad</summary><div class="in"><p class="note">Tu perfil vive en este teléfono. Exporta el archivo para llevártelo a otro móvil o recuperarlo si reinstalas.</p><div class="chips" style="margin-top:10px"><button id="bexp">Exportar perfil</button><button id="bimp">Importar perfil</button></div></div></details>
+  <details data-s="alg"><summary>Algoritmo</summary><div class="in"><p class="note">Cada pestaña tiene su propio modelo, que se entrena en tu teléfono con cada gesto: cuánto te quedas en una noticia respecto a lo que se tarda en leerla, si la abres, la guardas, la compartes o la descartas. Predice qué abrirás, qué leerás con calma y qué descartarás, y combina eso con lo reciente, lo que te interesa en esta sesión y tu objetivo. Reparte las fuentes: no repite la misma seguida ni te enseña la misma historia dos veces, y reserva huecos para fuentes que aún no has probado.</p><div class="chips" style="margin-top:10px">${TABS.map(t=>`<button data-reset="${t.id}">Reiniciar ${t.name}</button>`).join('')}</div></div></details>
+  <details data-s="bk" ${openSec==='bk'?'open':''}><summary>Copia de seguridad</summary><div class="in">
+    <p class="note" style="color:#f4f1eae0;font-weight:600">En la nube (tu Supabase)</p>
+    <p class="note" id="cst">${cc?'Usuario «'+esc(cc.user)+'» · '+(P.cloudAt?'última copia '+ago(P.cloudAt):'aún sin copia'):'Elige un usuario y una contraseña para tu copia. Con ellos la recuperas en cualquier móvil.'}</p>
+    <input class="field" id="cu" placeholder="Usuario de la copia" value="${esc(cc?cc.user:P.name)}" style="margin-top:10px" autocomplete="off" autocapitalize="off"><input class="field" id="cp" type="password" placeholder="${cc?'Contraseña (déjala vacía para usar la guardada)':'Contraseña (mínimo 8 caracteres)'}" autocomplete="off">
+    <div class="chips"><button id="csave">Guardar copia ahora</button><button id="crest">Restaurar la copia</button></div>
+    <div class="row" style="border:0"><div class="g" style="white-space:normal">Copia automática<small style="white-space:normal">Sube tu perfil al salir de la app, como mucho cada 6 horas.</small></div><button class="sw ${cc&&cc.auto?'on':''}" data-cauto="1"></button></div>
+    <p class="note" style="color:#f4f1eae0;font-weight:600;margin-top:14px">En un archivo</p>
+    <div class="chips" style="margin-top:8px"><button id="bexp">Exportar perfil</button><button id="bimp">Importar perfil</button></div></div></details>
   <button class="btn ghost" id="logout" style="margin-top:22px">Cerrar sesión</button>`}
 let tqT;
 $('#dbody').addEventListener('input',e=>{if(e.target.id!=='tq')return;clearTimeout(tqT);const q=e.target.value.trim();if(q.length<2){$('#tres').innerHTML='';return}
@@ -714,6 +807,17 @@ $('#dbody').addEventListener('toggle',e=>{if(e.target.open)openSec=e.target.data
 $('#dbody').addEventListener('click',e=>{const t=e.target,q=s=>t.closest(s);let m;
   if(dv==='saved'){const r=q('.sv');if(!r)return;const s=P.saved.find(x=>x.id===r.dataset.id);if(!s)return;if(q('[data-x]')){P.saved=P.saved.filter(x=>x!==s);save(true);openDrawer()}else{closeDrawer();openDetail(s,s.tab||'gen',null)}return}
   if((m=q('#stt button,#cft button,.ctab button'))){confTab=m.dataset.t;renderDrawer();return}
+  if(q('#goals')){const text=$('#goalt').value.trim(),st=$('#goalst');P.goal={text,terms:[...new Set(toks(text))].slice(0,30)};GV=null;save(true);
+    if(!text){st.textContent='Objetivo borrado.';resetFeed(active);return}
+    if(!aiOn()){st.textContent='Objetivo guardado.';resetFeed(active);return}
+    st.textContent='Guardado. Pidiendo a la IA los temas que conviene seguir…';
+    llm('Una persona describe a dónde quiere llegar: "'+text.slice(0,600).replace(/"/g,"'")+'". Devuelve SOLO un JSON {"terminos":[...]} con 30 términos de búsqueda cortos (1 a 3 palabras) que debería seguir en la actualidad para lograrlo: habilidades, conceptos, sectores, tipos de operación y tendencias. Mezcla español, inglés y francés. Sin nombres de personas.',true).then(r=>{let ts=[];try{const t=r.text;ts=arr(JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1)).terminos).map(x=>x.slice(0,40))}catch(_){}
+      if(ts.length){P.goal.terms=[...new Set(ts.concat(P.goal.terms))].slice(0,45);GV=null;save(true)}openSec='goal';if(dv==='conf')renderDrawer();resetFeed(active);toast(ts.length?'Objetivo guardado: sigo '+ts.length+' temas':'Objetivo guardado')});return}
+  if(q('#csave')||q('#crest')){const old=cloudCred(),u=$('#cu').value.trim(),pw=$('#cp').value||(old&&old.user===u?old.pass:''),st=$('#cst'),rest=!!q('#crest');
+    if(u.length<2||pw.length<8){st.textContent='Pon un usuario y una contraseña de al menos 8 caracteres.';return}
+    if(rest){st.textContent='Buscando tu copia…';cloudFetch(u,pw).then(r=>{if(r.err){const e=$('#cst');if(e)e.textContent=r.err;return}const nm=P.name;P=r.p;P.name=nm;LS.set('pulso.cloud.'+PID,{user:u,pass:pw,auto:old?old.auto:true});save(true);location.reload()});return}
+    LS.set('pulso.cloud.'+PID,{user:u,pass:pw,auto:old?old.auto:true});st.textContent='Subiendo tu perfil…';cloudSave(true).then(ok=>{openSec='bk';if(!ok){if(old)LS.set('pulso.cloud.'+PID,old);else LS.del('pulso.cloud.'+PID);rpc('pulso_backup_get',{p_user:u,p_pass:pw}).then(r=>{const e=$('#cst');if(e)e.textContent=r.ok?'No se pudo subir. Inténtalo de nuevo.':(r.msg==='Usuario o contraseña incorrectos'?'Ese usuario ya existe con otra contraseña, o no hay conexión.':r.msg)});return}toast('Copia guardada en la nube');if(dv==='conf')renderDrawer()});return}
+  if(q('[data-cauto]')){const c=cloudCred();if(!c){$('#cst').textContent='Primero guarda una copia con usuario y contraseña.';return}c.auto=!c.auto;LS.set('pulso.cloud.'+PID,c);openSec='bk';renderDrawer();return}
   if(q('[data-free]')){P.ai.free=!P.ai.free;save(true);openSec='ai';renderDrawer();return}
   if((m=q('[data-soc]'))){const k=m.dataset.soc;P.soc[k]=!P.soc[k];save(true);m.classList.toggle('on');return}
   if((m=q('[data-xrm]'))){P.x[confTab]=xAcc(confTab).filter(h=>h!==m.dataset.xrm);save(true);openSec='soc';renderDrawer();return}
@@ -729,24 +833,50 @@ $('#dbody').addEventListener('click',e=>{const t=e.target,q=s=>t.closest(s);let 
   if(q('#bimp')){impTarget='merge';$('#file').click();return}
   if(q('#logout')){save(true);LS.del('pulso.session');location.reload()}});
 
+/* ───────── copia en la nube (Supabase) ───────── */
+const SB={url:'https://khxnjdbisfpkpxpzxdlh.supabase.co',key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoeG5qZGJpc2Zwa3B4cHp4ZGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUyMDg1NDIsImV4cCI6MjExMDc4NDU0Mn0.3geOTWPZ2HAaWIBRi0VFIBT_-ns3wwI_jAHVXVhleJ8'};
+async function rpc(fn,args){const url=SB.url+'/rest/v1/rpc/'+fn,h={'Content-Type':'application/json',apikey:SB.key,Authorization:'Bearer '+SB.key},body=JSON.stringify(args);let status=0,text='';
+  if(window.Native&&!Native.web){const r=await nfetch(url,{method:'POST',headers:h,body,timeout:30000});status=r.status;text=r.text}
+  else{try{const r=await fetch(url,{method:'POST',headers:h,body});status=r.status;text=await r.text()}catch(e){}}
+  let j=null;try{j=JSON.parse(text)}catch(e){}
+  return status>=200&&status<300?{ok:true,data:j}:{ok:false,msg:(j&&j.message)||(status?'Error '+status:'Sin conexión')}}
+const cloudCred=()=>PID?LS.get('pulso.cloud.'+PID,null):null;
+let cloudBusy=false;
+async function cloudSave(silent){const c=cloudCred();if(!c||cloudBusy)return false;cloudBusy=true;save(true);const r=await rpc('pulso_backup_put',{p_user:c.user,p_pass:c.pass,p_data:P});cloudBusy=false;
+  if(r.ok){P.cloudAt=now();save(true);if(!silent)toast('Copia guardada en la nube')}else if(!silent)toast(r.msg);return r.ok}
+function cloudAuto(){const c=cloudCred();if(c&&c.auto&&now()-(P.cloudAt||0)>6*36e5)cloudSave(true)}
+async function cloudFetch(user,pass){const r=await rpc('pulso_backup_get',{p_user:user,p_pass:pass});if(!r.ok)return {err:r.msg};const d=r.data&&r.data.data;if(!d||!d.tabs)return {err:'La copia está vacía o dañada'};return {p:heal(d),at:r.data.updated_at}}
+
 /* ───────── session ───────── */
 let impTarget='new';
 const pinH=s=>hash('pulso:'+s+':'+s.length);
 function accounts(){return LS.get('pulso.accounts',[])}
 function loginUI(){const acc=accounts();$('#plist').innerHTML=acc.map(a=>`<button data-id="${a.id}"><span class="av">${esc(a.name[0].toUpperCase())}</span>${esc(a.name)}</button>`).join('');$('#lname').placeholder=acc.length?'Nuevo perfil: tu nombre':'Tu nombre'}
 function start(id){const acc=accounts().find(a=>a.id===id);if(!acc)return;PID=id;P=heal(LS.get('pulso.p.'+id,null)||blank(acc.name));decay();prune();LS.set('pulso.session',id);
-  $('#login').hidden=true;$('#app').hidden=false;$('#avatar').textContent=P.name[0].toUpperCase();buildFeeds();show('gen');save(true)}
+  $('#login').hidden=true;$('#app').hidden=false;$('#avatar').textContent=P.name[0].toUpperCase();buildFeeds();show('gen');save(true);setTimeout(cloudAuto,25000)}
 $('#plist').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=accounts().find(x=>x.id===b.dataset.id);if(a.pin){const p=prompt2();if(pinH(p)!==a.pin){$('#lerr').textContent='PIN incorrecto. Escríbelo abajo y toca tu perfil.';return}}start(a.id)});
 function prompt2(){return $('#lpin').value.trim()}
 $('#lgo').addEventListener('click',()=>{const n=$('#lname').value.trim(),p=$('#lpin').value.trim();if(!n){$('#lerr').textContent='Escribe un nombre para crear tu perfil.';return}const acc=accounts();if(acc.some(a=>norm(a.name)===norm(n))){$('#lerr').textContent='Ese perfil ya existe: tócalo arriba.';return}const id='u'+now().toString(36);acc.push({id,name:n,pin:p?pinH(p):''});LS.set('pulso.accounts',acc);LS.set('pulso.p.'+id,blank(n));start(id)});
 $('#limp').addEventListener('click',()=>{impTarget='new';$('#file').click()});
+$('#lcloud').addEventListener('click',()=>{$('#lcbox').hidden=!$('#lcbox').hidden});
+$('#lcgo').addEventListener('click',async()=>{const u=$('#lcu').value.trim(),pw=$('#lcp').value;if(!u||!pw){$('#lerr').textContent='Escribe el usuario y la contraseña de la copia.';return}$('#lerr').textContent='Buscando tu copia…';
+  const r=await cloudFetch(u,pw);if(r.err){$('#lerr').textContent=r.err;return}const p=r.p,acc=accounts();let a=acc.find(x=>norm(x.name)===norm(p.name));if(!a){a={id:'u'+now().toString(36),name:p.name,pin:''};acc.push(a);LS.set('pulso.accounts',acc)}
+  LS.set('pulso.p.'+a.id,p);LS.set('pulso.cloud.'+a.id,{user:u,pass:pw,auto:true});start(a.id)});
 $('#file').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);if(!j.pulso||!j.profile||!j.profile.tabs)throw 0;const p=heal(j.profile);
   if(impTarget==='merge'&&PID){p.name=P.name;P=p;save(true);location.reload();return}
   const acc=accounts();let a=acc.find(x=>norm(x.name)===norm(p.name));if(!a){a={id:'u'+now().toString(36),name:p.name,pin:''};acc.push(a);LS.set('pulso.accounts',acc)}LS.set('pulso.p.'+a.id,p);start(a.id)}catch(_){($('#lerr').textContent='Ese archivo no es una copia de Pulso.');toast('Archivo no válido')}};r.readAsText(f)});
 $('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)show(b.dataset.t)});
 $('#avatar').addEventListener('click',()=>openDrawer('saved'));
-$('#refresh').addEventListener('click',()=>{const st=S[active];st.relax=false;refreshTab(active,true);discover(active);if(active==='fin'){qAt=0;loadQuotes(true)}if(active==='geo'){brkAt=0;loadBreak()}toast('Buscando lo último…')});
-document.addEventListener('visibilitychange',()=>{if(!P)return;if(document.hidden){pause(true);save(true)}else{overlay();if(!S[active].loading)refreshTab(active,false);banner()}});
+function resetFeed(tab){const st=S[tab];closeDwell(tab);st.cards.forEach(c=>{io.unobserve(c.el);c.el.remove()});st.cards=[];st.cur=-1;st.t0=0;st.shown=new Set();st.relax=false;st.fresh=4;st.el.scrollTop=0;fill(tab);if(tab==='dep')applyScores()}
+let refreshing=false;
+$('#refresh').addEventListener('click',async()=>{if(refreshing)return;refreshing=true;const tab=active,st=S[tab],before=new Set(st.pool.keys());toast('Buscando lo último…');$('#refresh').classList.add('spin');
+  if(tab==='fin'){qAt=0;loadQuotes(true)}if(tab==='geo'){brkAt=0;loadBreak()}if(tab==='dep')loadScores(true);
+  for(let i=0;i<40&&st.loading;i++)await new Promise(r=>setTimeout(r,250));
+  await Promise.race([refreshTab(tab,true),new Promise(r=>setTimeout(r,12000))]);
+  let n=0;for(const k of st.pool.keys())if(!before.has(k))n++;
+  resetFeed(tab);st.lastDisc=0;discover(tab);refreshing=false;mark();
+  toast(n?(n===1?'1 noticia nueva':n+' noticias nuevas'):'Sin novedades en las fuentes; reordenado')});
+document.addEventListener('visibilitychange',()=>{if(!P)return;if(document.hidden){pause(true);save(true);cloudAuto()}else{overlay();if(!S[active].loading)refreshTab(active,false);banner()}});
 window.onBack=()=>{if(!P)return false;if($('#sheet').classList.contains('on')){closeDetail();return true}if($('#drawer').classList.contains('on')){closeDrawer();return true}return false};
 window.appToast=toast;
 (function init(){if(window.Native&&Native.web&&/iPhone|iPad|iPod/.test(navigator.userAgent)&&!navigator.standalone){const n=document.createElement('p');n.className='note';n.style.marginTop='18px';n.textContent='Para usarla como app: botón Compartir de Safari → «Añadir a pantalla de inicio».';$('#newp').appendChild(n)}loginUI();const s=LS.get('pulso.session',null);if(s&&accounts().some(a=>a.id===s))start(s)})();
